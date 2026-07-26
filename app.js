@@ -141,7 +141,9 @@
   };
 
   const getStats = () => {
-    const values = Object.values(store.stats);
+    const values = questions
+      .map((question) => store.stats[question.id])
+      .filter(Boolean);
     const attempts = values.reduce((sum, item) => sum + (item.attempts || 0), 0);
     const correct = values.reduce((sum, item) => sum + (item.correct || 0), 0);
     return {
@@ -162,7 +164,7 @@
           </span>
           <p class="eyebrow">River inspection study</p>
           <h1>河川点検士</h1>
-          <p>合格するための100問</p>
+          <p>合格するための300問</p>
           <form id="passwordForm">
             <label for="appPassword">パスワード</label>
             <div class="password-entry">
@@ -204,7 +206,7 @@
         </div>
         <div class="intro-title">
           <small>RIVER INSPECTION STUDY</small>
-          <h1>河川点検士<br><em>合格するための100問</em></h1>
+          <h1>河川点検士<br><em>合格するための300問</em></h1>
           <span>タップしてはじめる</span>
         </div>
       </section>
@@ -265,7 +267,7 @@
       <section class="hero">
         <p class="eyebrow">River inspection study</p>
         <h1>現場を見る目を、<br><em>一問ずつ。</em></h1>
-        <p class="hero-copy">写真55問・知識45問で、判断の根拠まで身につける。</p>
+        <p class="hero-copy">写真165問・知識135問で、判断の根拠まで身につける。</p>
         <span class="hero-version">Ver. 1.0</span>
       </section>
       <div class="home-content">
@@ -275,10 +277,10 @@
             <h2>${stats.studied ? `${stats.studied}問を学習済み` : "学習をはじめましょう"}</h2>
             <p>${stats.attempts ? `累計${stats.attempts}回答・正答率${stats.rate}%` : "記録はこの端末に保存されます。オフラインでも利用できます。"}</p>
           </div>
-          <div class="ring" style="--progress:${stats.studied}%"><span>${stats.studied}<small>/100</small></span></div>
+          <div class="ring" style="--progress:${(stats.studied / questions.length) * 100}%"><span>${stats.studied}<small>/${questions.length}</small></span></div>
         </section>
 
-        <div class="section-heading"><h2>学習メニュー</h2><small>100 QUESTIONS</small></div>
+        <div class="section-heading"><h2>学習メニュー</h2><small>${questions.length} QUESTIONS</small></div>
         <section class="mode-grid">
           <button class="mode-card primary" type="button" data-action="choose-field">
             <span class="mode-default">初期選択</span>
@@ -301,6 +303,7 @@
 
         <div class="section-heading"><h2>クイック学習</h2><small>QUICK FILTER</small></div>
         <section class="filter-list">
+          ${filterButton("未", "未回答問題だけ", "回答済みを除いて続きから", questions.filter((q) => !(store.stats[q.id]?.attempts > 0)).length, "unanswered")}
           ${filterButton("写真", "写真問題だけ", "現場の変状を見分ける", questions.filter((q) => q.type === "写真").length, "photo")}
           ${filterButton("法", "法令だけ", "河川法令の要点", questions.filter((q) => q.field === "河川法令").length, "law")}
           ${filterButton("S", "Sランクだけ", "最優先で復習", questions.filter((q) => q.priority === "S").length, "rank-s")}
@@ -694,7 +697,7 @@
       <h2>学習する分野を選ぶ</h2>
       <p>選択後に「回答を表示」を押すと、正解・詳細解説を表示します。</p>
       <div class="modal-actions">
-        <button class="modal-choice" type="button" data-action="start-field" data-field="all"><strong>全100問</strong><small>すべての分野から出題</small></button>
+        <button class="modal-choice" type="button" data-action="start-field" data-field="all"><strong>全${questions.length}問</strong><small>すべての分野から出題</small></button>
         ${fields.map((field) => {
           const count = questions.filter((question) => question.field === field).length;
           return `<button class="modal-choice" type="button" data-action="start-field" data-field="${escapeHtml(field)}"><strong>${escapeHtml(field)}</strong><small>${count}問</small></button>`;
@@ -750,6 +753,7 @@
 
   const quickStudy = (filter) => {
     const predicates = {
+      unanswered: (question) => !(store.stats[question.id]?.attempts > 0),
       photo: (question) => question.type === "写真",
       law: (question) => question.field === "河川法令",
       "rank-s": (question) => question.priority === "S",
@@ -757,6 +761,7 @@
       trend: (question) => question.trend >= 90
     };
     const titles = {
+      unanswered: "未回答問題",
       photo: "写真問題",
       law: "河川法令",
       "rank-s": "Sランク",

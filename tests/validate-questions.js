@@ -3,6 +3,7 @@ const path = require("path");
 global.window = global;
 require(path.resolve(__dirname, "..", "photo-questions.js"));
 require(path.resolve(__dirname, "..", "questions.js"));
+require(path.resolve(__dirname, "..", "extended-questions.js"));
 
 const questions = global.QUESTION_BANK;
 const failures = [];
@@ -13,16 +14,20 @@ const required = [
 ];
 
 if (!Array.isArray(questions)) failures.push("QUESTION_BANK must be an array");
-if (questions.length !== 100) failures.push(`Expected 100 questions, got ${questions.length}`);
+if (questions.length !== 300) failures.push(`Expected 300 questions, got ${questions.length}`);
 
-const expectedTypes = { 写真: 55, イラスト: 0, 知識: 45 };
+const expectedTypes = { 写真: 165, イラスト: 0, 知識: 135 };
 for (const [type, expected] of Object.entries(expectedTypes)) {
   const actual = questions.filter((question) => question.type === type).length;
   if (actual !== expected) failures.push(`${type}: expected ${expected}, got ${actual}`);
 }
 
 const ids = new Set();
-for (const question of questions) {
+for (const [index, question] of questions.entries()) {
+  const expectedId = `Q${String(index + 1).padStart(3, "0")}`;
+  if (question.id !== expectedId || question.number !== index + 1) {
+    failures.push(`${question.id}: expected stable sequence ${expectedId}/${index + 1}`);
+  }
   required.forEach((key) => {
     if (question[key] === undefined || question[key] === null || question[key] === "") {
       failures.push(`${question.id || "unknown"}: missing ${key}`);
@@ -32,6 +37,9 @@ for (const question of questions) {
   ids.add(question.id);
   if (!Array.isArray(question.choices) || question.choices.length !== 4) {
     failures.push(`${question.id}: choices must contain 4 items`);
+  }
+  if (new Set(question.choices).size !== 4) {
+    failures.push(`${question.id}: choices must be unique`);
   }
   if (!Number.isInteger(question.answer) || question.answer < 0 || question.answer > 3) {
     failures.push(`${question.id}: answer must be 0..3`);
