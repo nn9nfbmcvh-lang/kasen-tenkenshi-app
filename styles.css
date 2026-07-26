@@ -119,6 +119,36 @@ main { min-height: calc(100dvh - 74px); padding: 0 18px calc(92px + var(--safe-b
 .legacy-import-button { display: grid; width: 100%; gap: 4px; margin-top: 12px; padding: 15px 16px; color: var(--river-deep); text-align: left; border: 1px solid #9ccdc3; border-radius: 16px; background: #e7f5f1; cursor: pointer; }
 .legacy-import-button strong { font-size: 13px; }
 .legacy-import-button span { color: #52736d; font-size: 10px; }
+.pass-prediction { margin-top: 14px; padding: 20px; overflow: hidden; border: 1px solid #b8d8d1; border-radius: var(--radius); background: linear-gradient(145deg, #f8fffc, #e8f4f0); box-shadow: 0 12px 28px rgba(19, 67, 61, .09); }
+.prediction-heading { display: flex; gap: 16px; align-items: start; justify-content: space-between; }
+.prediction-heading small { display: block; margin-bottom: 5px; color: var(--river); font: 800 9px/1.2 ui-monospace, monospace; letter-spacing: .13em; }
+.prediction-heading h2 { margin: 0; font-size: 17px; }
+.prediction-score { flex: 0 0 auto; color: var(--river-deep); font: 800 28px/1 ui-monospace, monospace; }
+.prediction-label { display: inline-flex; margin-top: 15px; padding: 7px 11px; color: #fff; font-size: 12px; font-weight: 800; border-radius: 99px; background: var(--river); }
+.pass-prediction > p:not(.prediction-note) { margin: 9px 0 0; color: #4f6863; font-size: 10px; line-height: 1.6; }
+.prediction-bar { height: 7px; margin: 14px 0 16px; overflow: hidden; border-radius: 9px; background: rgba(15, 119, 112, .13); }
+.prediction-bar i { display: block; width: var(--prediction, 0%); height: 100%; border-radius: inherit; background: var(--river); transition: width .3s ease; }
+.prediction-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.prediction-metric { min-width: 0; padding: 11px; border: 1px solid rgba(15, 119, 112, .10); border-radius: 13px; background: rgba(255,255,255,.72); }
+.prediction-metric span, .prediction-metric strong, .prediction-metric small { display: block; }
+.prediction-metric span { overflow: hidden; color: var(--muted); font-size: 9px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.prediction-metric strong { margin: 5px 0 3px; color: var(--river-deep); font: 800 18px/1 ui-monospace, monospace; }
+.prediction-metric small { overflow: hidden; color: #77908b; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.prediction-bands { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 12px; }
+.prediction-bands span { display: flex; gap: 6px; align-items: center; color: #667873; font-size: 8px; }
+.prediction-bands b { color: var(--river-deep); }
+.prediction-note { margin: 14px 0 0; padding-top: 12px; color: #716d61; font-size: 8px; line-height: 1.65; border-top: 1px solid rgba(16,58,54,.10); }
+.prediction-note a { color: var(--river); font-weight: 800; text-underline-offset: 2px; }
+.pass-prediction.compact { margin: 0 0 22px; }
+.pass-very-high .prediction-label, .pass-very-high .prediction-bar i { background: #0b8174; }
+.pass-pass-range .prediction-label, .pass-pass-range .prediction-bar i { background: #277ca4; }
+.pass-pass-range { border-color: #b9d4df; background: linear-gradient(145deg, #f9fdff, #eaf4f8); }
+.pass-borderline .prediction-label, .pass-borderline .prediction-bar i { background: #b3771d; }
+.pass-borderline { border-color: #e4cf9d; background: linear-gradient(145deg, #fffdf8, #fbf3df); }
+.pass-review .prediction-label, .pass-review .prediction-bar i { background: #ad5144; }
+.pass-review { border-color: #e3beb7; background: linear-gradient(145deg, #fffafa, #f9eae7); }
+.pass-preparing .prediction-label { color: #52645f; background: #d8e2df; }
+.pass-preparing .prediction-score { color: #70807c; font-size: 20px; }
 .disclaimer { display: flex; gap: 10px; margin: 22px 2px 0; padding: 14px; color: #6d6759; font-size: 10px; line-height: 1.65; border: 1px solid #e1dacb; border-radius: 14px; background: #f1ecdf; }
 .disclaimer b { flex: 0 0 auto; }
 

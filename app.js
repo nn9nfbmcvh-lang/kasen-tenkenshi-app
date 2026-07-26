@@ -9,8 +9,8 @@
   const toastElement = document.querySelector("#toast");
   const networkBadge = document.querySelector("#networkBadge");
   const installButton = document.querySelector("#installButton");
-  const LEGACY_STORE_KEY = "kasen-tenkenshi-v1";
-  const STORE_KEY = "kasen-tenkenshi-v300";
+  const LEGACY_STORE_KEYS = ["kasen-tenkenshi-v300", "kasen-tenkenshi-v1"];
+  const STORE_KEY = "kasen-tenkenshi-v500";
   const AUTH_KEY = "kasen-tenkenshi-auth";
   const APP_PASSWORD = "4151";
   const INTRO_MESSAGE = "今日も一緒に、河川を見る目を鍛えよう！\n坂田さん　がんばって!!\n応援してるから";
@@ -41,7 +41,11 @@
   };
 
   const savedStore = loadStore(STORE_KEY);
-  const legacyStore = loadStore(LEGACY_STORE_KEY);
+  const legacyEntry = LEGACY_STORE_KEYS
+    .map((key) => ({ key, store: loadStore(key) }))
+    .find((entry) => entry.store);
+  const legacyStoreKey = legacyEntry?.key || LEGACY_STORE_KEYS[0];
+  const legacyStore = legacyEntry?.store || null;
   const legacyStats = Object.entries(legacyStore?.stats || {})
     .filter(([id, stat]) => questionMap.has(id) && (stat?.attempts || 0) > 0);
   const legacyAnsweredCount = legacyStats.length;
@@ -70,11 +74,29 @@
     Object.entries(previous.stats || {}).forEach(([id, stat]) => {
       if (!questionMap.has(id)) return;
       const existing = mergedStats[id];
+      const existingAnsweredAt = existing?.lastAnsweredAt || 0;
+      const previousAnsweredAt = stat.lastAnsweredAt || 0;
+      const mergedLastCorrect = existingAnsweredAt || previousAnsweredAt
+        ? (existingAnsweredAt >= previousAnsweredAt ? existing?.lastCorrect : stat.lastCorrect)
+        : typeof existing?.lastCorrect === "boolean"
+          ? existing.lastCorrect
+          : stat.lastCorrect;
       mergedStats[id] = existing
         ? {
             attempts: (existing.attempts || 0) + (stat.attempts || 0),
             correct: (existing.correct || 0) + (stat.correct || 0),
-            wrong: (existing.wrong || 0) + (stat.wrong || 0)
+            wrong: (existing.wrong || 0) + (stat.wrong || 0),
+            ...(typeof stat.firstAttemptCorrect === "boolean"
+              ? { firstAttemptCorrect: stat.firstAttemptCorrect }
+              : typeof existing.firstAttemptCorrect === "boolean"
+                ? { firstAttemptCorrect: existing.firstAttemptCorrect }
+                : {}),
+            ...(typeof mergedLastCorrect === "boolean"
+              ? { lastCorrect: mergedLastCorrect }
+              : {}),
+            ...(Math.max(existingAnsweredAt, previousAnsweredAt) > 0
+              ? { lastAnsweredAt: Math.max(existingAnsweredAt, previousAnsweredAt) }
+              : {})
           }
         : { ...stat };
     });
@@ -93,7 +115,7 @@
       history,
       activeSession: current.activeSession || previous.activeSession || null,
       migration: {
-        source: LEGACY_STORE_KEY,
+        source: legacyStoreKey,
         action: "imported",
         answered: legacyAnsweredCount,
         attempts: legacyAttemptCount,
@@ -208,6 +230,55 @@
     };
   };
 
+  const getPassPrediction = () => window.PASS_PREDICTION?.calculate(questions, store) || null;
+
+  const renderPassPrediction = ({ compact = false } = {}) => {
+    const prediction = getPassPrediction();
+    if (!prediction) return "";
+    const scoreText = prediction.ready ? `${prediction.score}%` : "準備中";
+    const supportText = prediction.ready
+      ? `推定スコア ${prediction.score}%・判定信頼度 ${prediction.confidence}`
+      : prediction.remainingForPrediction
+        ? `あと${prediction.remainingForPrediction}問学習するか、50問模擬試験を1回完了すると判定します。`
+        : "50問模擬試験を1回完了すると判定します。";
+    const metrics = prediction.components.map((component) => `
+      <div class="prediction-metric">
+        <span>${escapeHtml(component.label)}</span>
+        <strong>${component.value === null ? "—" : `${component.value}%`}</strong>
+        <small>${escapeHtml(component.detail)}</small>
+      </div>
+    `).join("");
+
+    return `
+      <section class="pass-prediction pass-${prediction.band.key}${compact ? " compact" : ""}">
+        <div class="prediction-heading">
+          <div>
+            <small>PASS OUTLOOK</small>
+            <h2>合格可能性の目安</h2>
+          </div>
+          <div class="prediction-score">${scoreText}</div>
+        </div>
+        <div class="prediction-label">${escapeHtml(prediction.band.label)}</div>
+        <p>${escapeHtml(supportText)}</p>
+        <div class="prediction-bar"><i style="--prediction:${prediction.ready ? prediction.score : 0}%"></i></div>
+        <div class="prediction-metrics">${metrics}</div>
+        ${compact ? "" : `
+          <div class="prediction-bands">
+            <span><b>85%以上</b>かなり高い</span>
+            <span><b>75〜84%</b>合格圏</span>
+            <span><b>65〜74%</b>ボーダー</span>
+            <span><b>64%以下</b>要復習</span>
+          </div>
+        `}
+        <p class="prediction-note">
+          公式CBTは資格認定委員会が100点満点中60点以上で合格基準点を決定します。
+          本表示は公式判定ではなく、安全側に設定した学習上の目安です。
+          <a href="https://cbt-s.com/examinee/examination/kasen_tenken.html" target="_blank" rel="noopener noreferrer">公式案内</a>
+        </p>
+      </section>
+    `;
+  };
+
   function renderPassword() {
     bottomNav.hidden = true;
     app.innerHTML = `
@@ -218,7 +289,7 @@
           </span>
           <p class="eyebrow">River inspection study</p>
           <h1>河川点検士</h1>
-          <p>合格するための300問</p>
+          <p>合格するための500問</p>
           <form id="passwordForm">
             <label for="appPassword">パスワード</label>
             <div class="password-entry">
@@ -260,7 +331,7 @@
         </div>
         <div class="intro-title">
           <small>RIVER INSPECTION STUDY</small>
-          <h1>河川点検士<br><em>合格するための300問</em></h1>
+          <h1>河川点検士<br><em>合格するための500問</em></h1>
           <span>タップしてはじめる</span>
         </div>
       </section>
@@ -329,7 +400,7 @@
       <section class="hero">
         <p class="eyebrow">River inspection study</p>
         <h1>現場を見る目を、<br><em>一問ずつ。</em></h1>
-        <p class="hero-copy">写真165問・知識135問で、判断の根拠まで身につける。</p>
+        <p class="hero-copy">写真220問・知識280問で、判断の根拠まで身につける。</p>
         <span class="hero-version">Ver. 1.0</span>
       </section>
       <div class="home-content">
@@ -342,6 +413,7 @@
           <div class="ring" style="--progress:${(stats.studied / questions.length) * 100}%"><span>${stats.studied}<small>/${questions.length}</small></span></div>
         </section>
         ${legacyImportButton}
+        ${renderPassPrediction()}
 
         <div class="section-heading"><h2>学習メニュー</h2><small>${questions.length} QUESTIONS</small></div>
         <section class="mode-grid">
@@ -514,8 +586,12 @@
   const recordAnswer = (question, selected) => {
     if (session.recorded.includes(question.id) || selected === undefined) return;
     const stat = store.stats[question.id] || { attempts: 0, correct: 0, wrong: 0 };
+    const isCorrect = selected === question.answer;
+    if (typeof stat.firstAttemptCorrect !== "boolean") stat.firstAttemptCorrect = isCorrect;
+    stat.lastCorrect = isCorrect;
+    stat.lastAnsweredAt = Date.now();
     stat.attempts += 1;
-    if (selected === question.answer) stat.correct += 1;
+    if (isCorrect) stat.correct += 1;
     else stat.wrong += 1;
     store.stats[question.id] = stat;
     session.recorded.push(question.id);
@@ -699,6 +775,7 @@
         <div class="stat-box"><strong>${result.correct}</strong><span>正解</span></div>
         <div class="stat-box"><strong>${result.wrong}</strong><span>誤答・未回答</span></div>
       </section>
+      ${renderPassPrediction({ compact: true })}
       <div class="action-stack">
         <button class="wide-button primary" type="button" data-action="retry-wrong" ${result.wrong ? "" : "disabled"}>間違えた問題だけ再出題（${result.wrong}問）</button>
         <button class="wide-button" type="button" data-action="review-results">全問題の正答・解説を見る</button>
@@ -831,7 +908,7 @@
     store = {
       ...emptyStore(),
       migration: {
-        source: LEGACY_STORE_KEY,
+        source: legacyStoreKey,
         action: "skipped",
         answered: legacyAnsweredCount,
         attempts: legacyAttemptCount,
@@ -843,7 +920,7 @@
     saveStore();
     closeModal();
     render();
-    showToast("新しい300問として開始します");
+    showToast("新しい500問として開始します");
   };
 
   const toggleReview = () => {
