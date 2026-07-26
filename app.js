@@ -20,6 +20,7 @@
   let typewriterTimerId = null;
   let installPrompt = null;
   let toastId = null;
+  let audioContext = null;
 
   const emptyStore = () => ({
     stats: {},
@@ -76,6 +77,37 @@
     toastElement.textContent = message;
     toastElement.classList.add("show");
     toastId = setTimeout(() => toastElement.classList.remove("show"), 2400);
+  };
+
+  const playAnswerClick = () => {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+
+    const play = () => {
+      const startedAt = audioContext.currentTime;
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      oscillator.type = "square";
+      oscillator.frequency.setValueAtTime(620, startedAt);
+      oscillator.frequency.exponentialRampToValueAtTime(430, startedAt + 0.055);
+      gain.gain.setValueAtTime(0.045, startedAt);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startedAt + 0.055);
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+      oscillator.start(startedAt);
+      oscillator.stop(startedAt + 0.06);
+    };
+
+    try {
+      audioContext ||= new AudioContextClass();
+      if (audioContext.state === "suspended") {
+        audioContext.resume().then(play).catch(() => {});
+      } else {
+        play();
+      }
+    } catch {
+      // 音声を利用できない環境でも回答操作は継続する。
+    }
   };
 
   const updateNav = (active = "") => {
@@ -248,20 +280,21 @@
 
         <div class="section-heading"><h2>学習メニュー</h2><small>100 QUESTIONS</small></div>
         <section class="mode-grid">
-          <button class="mode-card primary" type="button" data-action="start-exam">
+          <button class="mode-card primary" type="button" data-action="choose-field">
+            <span class="mode-default">初期選択</span>
+            <span class="mode-icon">
+              <svg viewBox="0 0 24 24"><path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H20v17H7.5A3.5 3.5 0 0 0 4 22zM4 5.5V22m4-15h8m-8 4h8"/></svg>
+            </span>
+            <strong>学習モード</strong>
+            <p>分野を選んで演習<br>回答表示後に正解と解説</p>
+            <span class="arrow">→</span>
+          </button>
+          <button class="mode-card" type="button" data-action="start-exam">
             <span class="mode-icon">
               <svg viewBox="0 0 24 24"><path d="M7 3h10v3H7zM6 5h12v16H6zM9 10h6m-6 4h6m-6 4h4"/></svg>
             </span>
             <strong>試験モード</strong>
             <p>50問・90分<br>終了後にまとめて採点</p>
-            <span class="arrow">→</span>
-          </button>
-          <button class="mode-card" type="button" data-action="choose-field">
-            <span class="mode-icon">
-              <svg viewBox="0 0 24 24"><path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H20v17H7.5A3.5 3.5 0 0 0 4 22zM4 5.5V22m4-15h8m-8 4h8"/></svg>
-            </span>
-            <strong>学習モード</strong>
-            <p>分野を選んで演習<br>すぐに正解と解説を表示</p>
             <span class="arrow">→</span>
           </button>
         </section>
@@ -333,6 +366,7 @@
     const selected = session.answers[question.id];
     const reveal = session.mode === "study" && session.revealed.includes(question.id);
     const reviewMode = session.mode === "review";
+    const exitLabel = session.mode === "exam" ? "試験を終了" : "学習を終了";
     const shouldReveal = reveal || reviewMode;
     const progress = ((session.index + 1) / session.ids.length) * 100;
     const timer = session.mode === "exam" ? `
@@ -380,7 +414,7 @@
           <button class="control-button primary" type="button" data-action="next">${session.index === session.ids.length - 1 ? (reviewMode ? "結果へ" : "終了・採点") : "次へ →"}</button>
           ${session.mode === "study" ? `<button class="control-button answer-button" type="button" data-action="show-answer" ${selected === undefined || reveal ? "disabled" : ""}>${reveal ? "回答表示済み" : "回答を表示"}</button>` : ""}
           <button class="control-button list-button" type="button" data-action="show-list">問題一覧</button>
-          ${!reviewMode ? `<button class="control-button exit-button" type="button" data-action="exit-learning">学習を終了</button>` : ""}
+          ${!reviewMode ? `<button class="control-button exit-button" type="button" data-action="exit-session">${exitLabel}</button>` : ""}
         </div>
       </section>
     `;
@@ -420,6 +454,7 @@
     const question = questionMap.get(session.ids[session.index]);
     session.revealed ||= [];
     if (session.mode === "review" || session.revealed.includes(question.id)) return;
+    playAnswerClick();
     session.answers[question.id] = index;
     saveStore();
     renderQuiz();
@@ -492,13 +527,15 @@
     `);
   };
 
-  const requestLearningExit = () => {
+  const requestSessionExit = () => {
+    const isExam = session?.mode === "exam";
+    const modeLabel = isExam ? "試験" : "学習";
     openModal(`
-      <h2>学習を終了しますか？</h2>
-      <p>回答済みの学習記録はこの端末に保存されています。</p>
+      <h2>${modeLabel}を終了しますか？</h2>
+      <p>${isExam ? "現在の回答は採点せずに終了します。" : "回答済みの学習記録はこの端末に保存されています。"}</p>
       <div class="modal-actions">
-        <button class="wide-button primary" type="button" data-action="confirm-exit-learning">学習を終了</button>
-        <button class="wide-button" type="button" data-action="close-modal">学習を続ける</button>
+        <button class="wide-button primary" type="button" data-action="confirm-exit-session">${modeLabel}を終了</button>
+        <button class="wide-button" type="button" data-action="close-modal">${modeLabel}を続ける</button>
       </div>
     `);
   };
@@ -554,6 +591,7 @@
     bottomNav.hidden = false;
     updateNav("");
     const result = sessionResult();
+    const resultModeLabel = session.mode === "exam" ? "試験" : "学習";
     const grade = result.rate >= 90 ? "Excellent" : result.rate >= 75 ? "Good" : result.rate >= 60 ? "Keep going" : "要復習";
     app.innerHTML = `
       <div class="page-heading"><p>SESSION RESULT</p><h1>学習結果</h1></div>
@@ -573,7 +611,7 @@
         <button class="wide-button primary" type="button" data-action="retry-wrong" ${result.wrong ? "" : "disabled"}>間違えた問題だけ再出題（${result.wrong}問）</button>
         <button class="wide-button" type="button" data-action="review-results">全問題の正答・解説を見る</button>
         <button class="wide-button" type="button" data-action="home">ホームへ戻る</button>
-        <button class="wide-button end-study-button" type="button" data-action="confirm-exit-learning">学習を終了</button>
+        <button class="wide-button end-study-button" type="button" data-action="confirm-exit-session">${resultModeLabel}を終了</button>
       </div>
     `;
   }
@@ -629,7 +667,7 @@
     const fields = [...new Set(questions.map((question) => question.field))];
     openModal(`
       <h2>学習する分野を選ぶ</h2>
-      <p>回答するとすぐに正解・詳細解説を表示します。</p>
+      <p>選択後に「回答を表示」を押すと、正解・詳細解説を表示します。</p>
       <div class="modal-actions">
         <button class="modal-choice" type="button" data-action="start-field" data-field="all"><strong>全100問</strong><small>すべての分野から出題</small></button>
         ${fields.map((field) => {
@@ -757,8 +795,8 @@
       render();
     }
     else if (action === "finish-session") finishSession();
-    else if (action === "exit-learning") requestLearningExit();
-    else if (action === "confirm-exit-learning") showOutro();
+    else if (action === "exit-session") requestSessionExit();
+    else if (action === "confirm-exit-session") showOutro();
     else if (action === "review-results") reviewResults();
     else if (action === "retry-wrong") retryWrong();
     else if (action === "show-history") { currentView = "history"; render(); }

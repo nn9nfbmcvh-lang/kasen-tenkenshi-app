@@ -1,14 +1,14 @@
-const CACHE_NAME = "kasen-tenkenshi-v1.3.0";
+const CACHE_NAME = "kasen-tenkenshi-v1.3.1";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=1.3.0",
-  "./photo-questions.js?v=1.3.0",
-  "./questions.js?v=1.3.0",
-  "./app.js?v=1.3.0",
-  "./manifest.webmanifest?v=1.3.0",
-  "./assets/icon.svg?v=1.3.0",
-  "./assets/icon-180.png?v=1.3.0",
+  "./styles.css?v=1.3.1",
+  "./photo-questions.js?v=1.3.1",
+  "./questions.js?v=1.3.1",
+  "./app.js?v=1.3.1",
+  "./manifest.webmanifest?v=1.3.1",
+  "./assets/icon.svg?v=1.3.1",
+  "./assets/icon-180.png?v=1.3.1",
   "./assets/icon-192.png",
   "./assets/icon-512.png",
   "./assets/launch.jpg",
