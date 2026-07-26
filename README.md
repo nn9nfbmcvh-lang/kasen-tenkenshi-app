@@ -8,8 +8,8 @@ https://nn9nfbmcvh-lang.github.io/kasen-tenkenshi-app/
 ## Ver.1.0 の機能
 
 - 全100問
-  - 写真問題 40問
-  - イラスト問題 15問
+  - 写真問題 55問（実写真40問・AI参考写真15問）
+  - イラスト問題 0問
   - 知識問題 45問
 - 全問に分野、中分類、小分類、5段階難易度、想定出題傾向、復習優先度、キーワード、詳細解説、関連問題を収録
 - 試験モード
@@ -45,7 +45,7 @@ python -m http.server 4173
 
 ## 問題データ
 
-写真問題は `photo-questions.js`、イラスト・知識問題は `questions.js` に格納しています。各問題は次の項目を持ちます。
+実写真問題は `photo-questions.js`、AI参考写真・知識問題は `questions.js` に格納しています。各問題は次の項目を持ちます。
 
 ```text
 id / number / type / question / choices / answer / explanation
@@ -61,7 +61,7 @@ node tests/validate-questions.js
 
 ## 写真の出典
 
-写真問題40問は、国土交通省「堤防等河川管理施設及び河道の点検・評価要領 参考資料」の事例写真を、表示用にサイズ・圧縮率を調整して使用しています。
+実写真問題40問は、国土交通省「堤防等河川管理施設及び河道の点検・評価要領 参考資料」の事例写真を、表示用にサイズ・圧縮率を調整して使用しています。追加の15問は問題文から推定して作成したAI参考写真で、アプリ画面上でもその旨を明記しています。
 
 - 出典：[国土交通省「堤防等河川管理施設及び河道の点検・評価要領 参考資料」](https://www.mlit.go.jp/river/shishin_guideline/kasen/pdf/08_teiboukadou_tenkenkekka_sankou.pdf)
 - 利用条件：[国土交通省 リンク・著作権・免責事項](https://www.mlit.go.jp/link.html)

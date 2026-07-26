@@ -15,7 +15,7 @@ const required = [
 if (!Array.isArray(questions)) failures.push("QUESTION_BANK must be an array");
 if (questions.length !== 100) failures.push(`Expected 100 questions, got ${questions.length}`);
 
-const expectedTypes = { 写真: 40, イラスト: 15, 知識: 45 };
+const expectedTypes = { 写真: 55, イラスト: 0, 知識: 45 };
 for (const [type, expected] of Object.entries(expectedTypes)) {
   const actual = questions.filter((question) => question.type === type).length;
   if (actual !== expected) failures.push(`${type}: expected ${expected}, got ${actual}`);
@@ -49,7 +49,7 @@ for (const question of questions) {
     failures.push(`${question.id}: visual question requires a scene`);
   }
   if (question.type === "写真") {
-    if (typeof question.scene !== "object" || !question.scene.src || !question.scene.sourceUrl) {
+    if (typeof question.scene !== "object" || !question.scene.src || (!question.scene.generated && !question.scene.sourceUrl)) {
       failures.push(`${question.id}: photo question requires image and source metadata`);
     } else {
       const imagePath = path.resolve(__dirname, "..", question.scene.src.replace(/^\.\//, ""));
