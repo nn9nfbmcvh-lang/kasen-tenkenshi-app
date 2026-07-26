@@ -74,11 +74,29 @@
     Object.entries(previous.stats || {}).forEach(([id, stat]) => {
       if (!questionMap.has(id)) return;
       const existing = mergedStats[id];
+      const existingAnsweredAt = existing?.lastAnsweredAt || 0;
+      const previousAnsweredAt = stat.lastAnsweredAt || 0;
+      const mergedLastCorrect = existingAnsweredAt || previousAnsweredAt
+        ? (existingAnsweredAt >= previousAnsweredAt ? existing?.lastCorrect : stat.lastCorrect)
+        : typeof existing?.lastCorrect === "boolean"
+          ? existing.lastCorrect
+          : stat.lastCorrect;
       mergedStats[id] = existing
         ? {
             attempts: (existing.attempts || 0) + (stat.attempts || 0),
             correct: (existing.correct || 0) + (stat.correct || 0),
-            wrong: (existing.wrong || 0) + (stat.wrong || 0)
+            wrong: (existing.wrong || 0) + (stat.wrong || 0),
+            ...(typeof stat.firstAttemptCorrect === "boolean"
+              ? { firstAttemptCorrect: stat.firstAttemptCorrect }
+              : typeof existing.firstAttemptCorrect === "boolean"
+                ? { firstAttemptCorrect: existing.firstAttemptCorrect }
+                : {}),
+            ...(typeof mergedLastCorrect === "boolean"
+              ? { lastCorrect: mergedLastCorrect }
+              : {}),
+            ...(Math.max(existingAnsweredAt, previousAnsweredAt) > 0
+              ? { lastAnsweredAt: Math.max(existingAnsweredAt, previousAnsweredAt) }
+              : {})
           }
         : { ...stat };
     });
@@ -210,6 +228,55 @@
       correct,
       rate: attempts ? Math.round((correct / attempts) * 100) : 0
     };
+  };
+
+  const getPassPrediction = () => window.PASS_PREDICTION?.calculate(questions, store) || null;
+
+  const renderPassPrediction = ({ compact = false } = {}) => {
+    const prediction = getPassPrediction();
+    if (!prediction) return "";
+    const scoreText = prediction.ready ? `${prediction.score}%` : "準備中";
+    const supportText = prediction.ready
+      ? `推定スコア ${prediction.score}%・判定信頼度 ${prediction.confidence}`
+      : prediction.remainingForPrediction
+        ? `あと${prediction.remainingForPrediction}問学習するか、50問模擬試験を1回完了すると判定します。`
+        : "50問模擬試験を1回完了すると判定します。";
+    const metrics = prediction.components.map((component) => `
+      <div class="prediction-metric">
+        <span>${escapeHtml(component.label)}</span>
+        <strong>${component.value === null ? "—" : `${component.value}%`}</strong>
+        <small>${escapeHtml(component.detail)}</small>
+      </div>
+    `).join("");
+
+    return `
+      <section class="pass-prediction pass-${prediction.band.key}${compact ? " compact" : ""}">
+        <div class="prediction-heading">
+          <div>
+            <small>PASS OUTLOOK</small>
+            <h2>合格可能性の目安</h2>
+          </div>
+          <div class="prediction-score">${scoreText}</div>
+        </div>
+        <div class="prediction-label">${escapeHtml(prediction.band.label)}</div>
+        <p>${escapeHtml(supportText)}</p>
+        <div class="prediction-bar"><i style="--prediction:${prediction.ready ? prediction.score : 0}%"></i></div>
+        <div class="prediction-metrics">${metrics}</div>
+        ${compact ? "" : `
+          <div class="prediction-bands">
+            <span><b>85%以上</b>かなり高い</span>
+            <span><b>75〜84%</b>合格圏</span>
+            <span><b>65〜74%</b>ボーダー</span>
+            <span><b>64%以下</b>要復習</span>
+          </div>
+        `}
+        <p class="prediction-note">
+          公式CBTは資格認定委員会が100点満点中60点以上で合格基準点を決定します。
+          本表示は公式判定ではなく、安全側に設定した学習上の目安です。
+          <a href="https://cbt-s.com/examinee/examination/kasen_tenken.html" target="_blank" rel="noopener noreferrer">公式案内</a>
+        </p>
+      </section>
+    `;
   };
 
   function renderPassword() {
@@ -346,6 +413,7 @@
           <div class="ring" style="--progress:${(stats.studied / questions.length) * 100}%"><span>${stats.studied}<small>/${questions.length}</small></span></div>
         </section>
         ${legacyImportButton}
+        ${renderPassPrediction()}
 
         <div class="section-heading"><h2>学習メニュー</h2><small>${questions.length} QUESTIONS</small></div>
         <section class="mode-grid">
@@ -518,8 +586,12 @@
   const recordAnswer = (question, selected) => {
     if (session.recorded.includes(question.id) || selected === undefined) return;
     const stat = store.stats[question.id] || { attempts: 0, correct: 0, wrong: 0 };
+    const isCorrect = selected === question.answer;
+    if (typeof stat.firstAttemptCorrect !== "boolean") stat.firstAttemptCorrect = isCorrect;
+    stat.lastCorrect = isCorrect;
+    stat.lastAnsweredAt = Date.now();
     stat.attempts += 1;
-    if (selected === question.answer) stat.correct += 1;
+    if (isCorrect) stat.correct += 1;
     else stat.wrong += 1;
     store.stats[question.id] = stat;
     session.recorded.push(question.id);
@@ -703,6 +775,7 @@
         <div class="stat-box"><strong>${result.correct}</strong><span>正解</span></div>
         <div class="stat-box"><strong>${result.wrong}</strong><span>誤答・未回答</span></div>
       </section>
+      ${renderPassPrediction({ compact: true })}
       <div class="action-stack">
         <button class="wide-button primary" type="button" data-action="retry-wrong" ${result.wrong ? "" : "disabled"}>間違えた問題だけ再出題（${result.wrong}問）</button>
         <button class="wide-button" type="button" data-action="review-results">全問題の正答・解説を見る</button>
