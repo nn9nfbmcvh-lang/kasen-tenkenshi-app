@@ -326,9 +326,12 @@ main { min-height: calc(100dvh - 74px); padding: 0 18px calc(92px + var(--safe-b
 }
 .intro-bubble {
   top: max(68px, calc(env(safe-area-inset-top) + 44px));
-  left: max(18px, env(safe-area-inset-left));
-  width: min(72vw, 310px);
-  white-space: pre-wrap;
+  left: max(6px, env(safe-area-inset-left));
+  width: min(80vw, 330px);
+  padding-right: 14px;
+  padding-left: 14px;
+  text-align: left;
+  white-space: pre-line;
 }
 .intro-bubble::after {
   position: absolute;
