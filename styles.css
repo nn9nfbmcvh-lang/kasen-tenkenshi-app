@@ -120,6 +120,12 @@ main { min-height: calc(100dvh - 74px); padding: 0 18px calc(92px + var(--safe-b
 .visual-panel { position: relative; overflow: hidden; margin: 0 0 18px; border-radius: 19px; background: #ccd9d4; box-shadow: inset 0 0 0 1px rgba(0,0,0,.05); aspect-ratio: 16 / 9; }
 .visual-panel svg { display: block; width: 100%; height: 100%; }
 .visual-label { position: absolute; right: 10px; bottom: 9px; padding: 5px 8px; color: #fff; font-size: 9px; font-weight: 700; border-radius: 7px; background: rgba(9, 29, 27, .64); backdrop-filter: blur(5px); }
+.photo-figure { margin: 0 0 18px; }
+.photo-figure .visual-panel { margin-bottom: 7px; }
+.photo-scene { aspect-ratio: 4 / 3; background: #172420; }
+.question-photo { display: block; width: 100%; height: 100%; object-fit: contain; background: #172420; }
+.photo-source { padding: 0 3px; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.photo-source a { color: #31675e; text-decoration: underline; text-underline-offset: 2px; }
 .choices { display: grid; gap: 10px; }
 .choice { display: grid; grid-template-columns: 31px 1fr auto; gap: 11px; align-items: center; width: 100%; min-height: 58px; padding: 11px 13px; color: var(--ink); text-align: left; border: 1px solid #d9dedb; border-radius: 15px; background: #fff; cursor: pointer; }
 .choice:disabled { cursor: default; opacity: 1; }

@@ -775,57 +775,30 @@
   });
 
   function renderVisual(question) {
+    if (question.type === "写真") {
+      const photo = question.scene;
+      return `
+        <figure class="photo-figure">
+          <div class="visual-panel photo-scene">
+            <img class="question-photo" src="${escapeHtml(photo.src)}" alt="${escapeHtml(photo.alt)}" decoding="async">
+            <span class="visual-label">実写真</span>
+          </div>
+          <figcaption class="photo-source">
+            出典：<a href="${escapeHtml(photo.sourceUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(photo.sourceTitle)} p.${photo.sourcePage}（国土交通省）</a>を加工して作成
+          </figcaption>
+        </figure>
+      `;
+    }
+
     const hash = [...question.scene].reduce((sum, char) => sum + char.charCodeAt(0), 0);
     const markerX = 90 + (hash % 210);
-    if (question.type === "イラスト") return `
+    return `
       <div class="visual-panel illustration">
         ${illustrationSvg(question.scene, markerX)}
         <span class="visual-label">模式図</span>
       </div>
     `;
-    return `
-      <div class="visual-panel photo-scene">
-        ${photoSvg(question.scene, markerX, hash)}
-        <span class="visual-label">現場写真・模式再現</span>
-      </div>
-    `;
   }
-
-  const photoSvg = (scene, markerX, hash) => {
-    const water = ["scour", "outlet", "drop-structure", "bridge-debris", "groin", "bank-erosion", "sandbar", "channel-trees", "fishway", "flooded-crossing"].includes(scene);
-    const structure = ["gate-debris", "trash-rack", "structure-gap", "culvert-joint", "spalling", "weir-crack"].includes(scene);
-    const targetY = water ? 145 : structure ? 118 : 95 + (hash % 55);
-    return `
-      <svg viewBox="0 0 400 225" role="img" aria-label="点検対象の模式再現画像">
-        <defs>
-          <linearGradient id="sky-${hash}" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#a7c9cc"/><stop offset="1" stop-color="#e4ddd0"/></linearGradient>
-          <linearGradient id="water-${hash}" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#6e9693"/><stop offset="1" stop-color="#365f60"/></linearGradient>
-          <filter id="grain-${hash}"><feTurbulence baseFrequency=".85" numOctaves="2" stitchTiles="stitch" type="fractalNoise"/><feColorMatrix values="0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 .12 0"/></filter>
-        </defs>
-        <rect width="400" height="225" fill="url(#sky-${hash})"/>
-        <path d="M0 94 45 76l48 12 52-22 58 24 50-17 54 16 48-10 45 14v52H0Z" fill="#57715f"/>
-        <path d="M0 108c72-16 122 7 189-5 81-14 135-16 211 5v117H0Z" fill="${water ? `url(#water-${hash})` : "#8b9470"}"/>
-        ${structure ? `
-          <path d="M40 63h105v138H40z" fill="#8d8c84"/><path d="M57 81h71v120H57z" fill="#384b49"/>
-          <path d="M145 84h182l37 117H145z" fill="#a5a097"/>
-          <path d="M158 100h153M163 122h155M169 145h156M176 169h157" stroke="#77776f" stroke-width="3"/>
-        ` : water ? `
-          <path d="M0 128c88 21 111-8 203 7 72 12 135-5 197 4v86H0Z" fill="url(#water-${hash})"/>
-          <path d="M0 169c70-13 122 7 185-3 73-12 134 9 215-3" fill="none" stroke="#a7c6bd" stroke-width="3" opacity=".6"/>
-          <path d="M0 195c77-9 123 9 203-2 70-10 118 5 197-5" fill="none" stroke="#b8d0c8" stroke-width="2" opacity=".45"/>
-        ` : `
-          <path d="M0 124 400 81v144H0Z" fill="#8c8a76"/>
-          <path d="M0 140 400 96M0 163l400-43M0 188l400-45" stroke="#b0ab96" stroke-width="3"/>
-          <path d="M45 119v106M115 110v115M190 100v125M270 91v134M350 83v142" stroke="#6f7062" stroke-width="2"/>
-        `}
-        <rect width="400" height="225" filter="url(#grain-${hash})" opacity=".8"/>
-        <circle cx="${markerX}" cy="${targetY}" r="18" fill="none" stroke="#f47c48" stroke-width="4"/>
-        <path d="m${markerX + 14} ${targetY - 14} 23-23" stroke="#f47c48" stroke-width="3"/>
-        <rect x="${Math.min(markerX + 28, 300)}" y="${Math.max(targetY - 53, 12)}" width="77" height="24" rx="6" fill="#e76f3c"/>
-        <text x="${Math.min(markerX + 66, 338)}" y="${Math.max(targetY - 37, 28)}" fill="white" font-size="11" text-anchor="middle" font-family="sans-serif" font-weight="700">点検箇所</text>
-      </svg>
-    `;
-  };
 
   const illustrationSvg = (scene, markerX) => {
     if (scene === "risk-matrix") {
