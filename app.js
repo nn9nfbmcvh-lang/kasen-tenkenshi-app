@@ -12,7 +12,7 @@
   const STORE_KEY = "kasen-tenkenshi-v1";
   const AUTH_KEY = "kasen-tenkenshi-auth";
   const APP_PASSWORD = "4151";
-  const INTRO_MESSAGE = "坂田さん　がんばって!!\n応援してるから";
+  const INTRO_MESSAGE = "今日も一緒に、河川を見る目を鍛えよう！\n坂田さん　がんばって!!\n応援してるから";
   const OUTRO_MESSAGE = "おつかれさま！ひと休みして、また挑戦しよう！";
   const letters = ["A", "B", "C", "D"];
   let timerId = null;
@@ -90,7 +90,7 @@
       oscillator.type = "square";
       oscillator.frequency.setValueAtTime(620, startedAt);
       oscillator.frequency.exponentialRampToValueAtTime(430, startedAt + 0.055);
-      gain.gain.setValueAtTime(0.045, startedAt);
+      gain.gain.setValueAtTime(0.07, startedAt);
       gain.gain.exponentialRampToValueAtTime(0.0001, startedAt + 0.055);
       oscillator.connect(gain);
       gain.connect(audioContext.destination);
