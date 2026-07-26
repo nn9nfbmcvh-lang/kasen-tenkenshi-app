@@ -11,6 +11,7 @@ const QUESTION_META = {
 let examAnswers = {};
 let reviewFlags = new Set();
 let lastWrongIds = [];
+let revealedAnswers = new Set();
 
 function stars(level){ return '★'.repeat(level)+'☆'.repeat(5-level); }
 
@@ -22,13 +23,14 @@ function startQuiz(mode){
   } else if(mode==='random10') quiz=shuffle(QUESTIONS).slice(0,10);
   else quiz=shuffle(QUESTIONS);
   index=0; score=0; remaining=5400; answered=false;
-  examAnswers={}; reviewFlags=new Set();
+  examAnswers={}; reviewFlags=new Set(); revealedAnswers=new Set();
   $('home').classList.add('hidden'); $('result').classList.add('hidden'); $('quiz').classList.remove('hidden');
   clearInterval(timerId); timerId=setInterval(tick,1000); tick(); render();
 }
 
 function render(){
   const q=quiz[index];
+  const revealed=revealedAnswers.has(q.id);
   const meta=QUESTION_META[q.id]||{level:3,label:'本試験レベル',trend:70};
   $('progress').textContent=`${index+1} / ${quiz.length}`;
   $('category').textContent=q.category;
@@ -40,9 +42,22 @@ function render(){
     const n=i+1, b=document.createElement('button');
     b.className='choice'; b.textContent=`${n}. ${t}`;
     if(examAnswers[q.id]===n) b.classList.add('selected');
+    if(revealed && n===q.answer) b.classList.add('correct');
+    if(revealed && examAnswers[q.id]===n && n!==q.answer) b.classList.add('wrong');
+    b.disabled=revealed;
     b.onclick=()=>selectAnswer(n); c.appendChild(b);
   });
-  $('feedback').classList.add('hidden');
+  const revealBtn=$('revealAnswerBtn');
+  revealBtn.classList.remove('hidden');
+  revealBtn.disabled=!examAnswers[q.id]||revealed;
+  revealBtn.textContent=revealed?'回答表示済み':'回答を表示';
+  if(revealed){
+    const selected=examAnswers[q.id];
+    $('feedback').innerHTML=`<strong>${selected===q.answer?'正解':'不正解'}（正解：${q.answer}）</strong><br>${q.explanation}`;
+    $('feedback').classList.remove('hidden');
+  } else {
+    $('feedback').classList.add('hidden');
+  }
   $('prevBtn').disabled=index===0;
   $('nextBtn').textContent=index===quiz.length-1?'採点へ':'次へ';
   $('reviewCheck').checked=reviewFlags.has(q.id);
@@ -50,9 +65,18 @@ function render(){
 }
 
 function selectAnswer(n){
-  const q=quiz[index]; examAnswers[q.id]=n;
+  const q=quiz[index];
+  if(revealedAnswers.has(q.id)) return;
+  examAnswers[q.id]=n;
   [...document.querySelectorAll('.choice')].forEach((b,i)=>b.classList.toggle('selected',i+1===n));
+  $('revealAnswerBtn').disabled=false;
   renderNavigator();
+}
+function revealAnswer(){
+  const q=quiz[index], selected=examAnswers[q.id];
+  if(!selected){ alert('回答を選択してください。'); return; }
+  revealedAnswers.add(q.id);
+  render();
 }
 function previousQuestion(){ if(index>0){ index--; render(); } }
 function nextQuestion(){ if(index<quiz.length-1){ index++; render(); } else confirmFinish(); }

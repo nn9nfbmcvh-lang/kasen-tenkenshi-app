@@ -42,12 +42,14 @@
     <div id="choices"></div>
     <label class="reviewLabel"><input id="reviewCheck" type="checkbox" onchange="toggleReview()"> 後で見直す</label>
     <div id="questionNav" class="questionNav"></div>
+    <button id="revealAnswerBtn" class="answerReveal hidden" onclick="revealAnswer()">回答を表示</button>
     <div id="feedback" class="hidden"></div>
     <div class="nav twoCol">
       <button id="prevBtn" class="secondary" onclick="previousQuestion()">前へ</button>
       <button id="nextBtn" onclick="nextQuestion()">次へ</button>
     </div>
     <button class="secondary" onclick="confirmFinish()">試験を終了して採点</button>
+    <button class="endLearningBtn" onclick="confirmEndLearning()">学習を終了</button>
   </section>
 
   <section id="result" class="card hidden">
@@ -56,8 +58,30 @@
     <div id="resultDetails"></div>
     <button id="retryWrongBtn" onclick="retryLastWrong()">間違えた問題だけ再出題</button>
     <button class="secondary" onclick="showHome()">ホームへ</button>
+    <button class="endLearningBtn" onclick="showOutro()">学習を終了</button>
   </section>
 </main>
+
+<section id="introScreen" class="experienceScreen introScreen hidden" role="button" tabindex="0" aria-label="タップして問題画面へ">
+  <img src="assets/launch.jpg" alt="机で河川点検士の勉強をする学生と犬">
+  <div class="experienceShade"></div>
+  <div class="speechBubble introBubble" aria-label="今日も一緒に、河川を見る目を鍛えよう！">
+    <span id="introMessage" aria-hidden="true"></span><i class="typingCaret" aria-hidden="true"></i>
+  </div>
+  <div class="introTitle">
+    <small>RIVER INSPECTION STUDY</small>
+    <h2>河川点検士<br><em>合格するための500問</em></h2>
+    <span>タップしてはじめる</span>
+  </div>
+</section>
+
+<section id="outroScreen" class="experienceScreen outroScreen hidden">
+  <img src="assets/finish.jpg" alt="休憩しながら飲み物を楽しむ犬">
+  <div class="experienceShade"></div>
+  <div class="speechBubble outroBubble">おつかれさま！ひと休みして、また挑戦しよう！</div>
+  <button class="outroHomeBtn" onclick="returnFromOutro()">トップへ戻る</button>
+</section>
+
 <footer>オリジナル学習問題／公式試験問題ではありません</footer>
 <script src="app.js"></script>
 <script src="exam.js"></script>
