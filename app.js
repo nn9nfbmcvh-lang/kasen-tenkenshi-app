@@ -9,7 +9,8 @@
   const toastElement = document.querySelector("#toast");
   const networkBadge = document.querySelector("#networkBadge");
   const installButton = document.querySelector("#installButton");
-  const STORE_KEY = "kasen-tenkenshi-v1";
+  const LEGACY_STORE_KEY = "kasen-tenkenshi-v1";
+  const STORE_KEY = "kasen-tenkenshi-v300";
   const AUTH_KEY = "kasen-tenkenshi-auth";
   const APP_PASSWORD = "4151";
   const INTRO_MESSAGE = "今日も一緒に、河川を見る目を鍛えよう！\n坂田さん　がんばって!!\n応援してるから";
@@ -26,18 +27,34 @@
     stats: {},
     bookmarks: [],
     history: [],
-    activeSession: null
+    activeSession: null,
+    migration: null
   });
 
-  const loadStore = () => {
+  const loadStore = (key) => {
     try {
-      return { ...emptyStore(), ...JSON.parse(localStorage.getItem(STORE_KEY) || "{}") };
+      const saved = localStorage.getItem(key);
+      return saved ? { ...emptyStore(), ...JSON.parse(saved) } : null;
     } catch {
-      return emptyStore();
+      return null;
     }
   };
 
-  let store = loadStore();
+  const savedStore = loadStore(STORE_KEY);
+  const legacyStore = loadStore(LEGACY_STORE_KEY);
+  const legacyStats = Object.entries(legacyStore?.stats || {})
+    .filter(([id, stat]) => questionMap.has(id) && (stat?.attempts || 0) > 0);
+  const legacyAnsweredCount = legacyStats.length;
+  const legacyAttemptCount = legacyStats
+    .reduce((sum, [, stat]) => sum + (stat.attempts || 0), 0);
+  const hasLegacyResults = Boolean(
+    legacyAnsweredCount
+    || legacyStore?.bookmarks?.length
+    || legacyStore?.history?.length
+    || legacyStore?.activeSession
+  );
+  let legacyMigrationPending = !savedStore && hasLegacyResults;
+  let store = savedStore || emptyStore();
   let session = store.activeSession && Array.isArray(store.activeSession.ids)
     ? store.activeSession
     : null;
@@ -46,6 +63,43 @@
   const saveStore = () => {
     store.activeSession = session && !session.finished ? session : null;
     localStorage.setItem(STORE_KEY, JSON.stringify(store));
+  };
+
+  const mergeStores = (current, previous) => {
+    const mergedStats = { ...(current.stats || {}) };
+    Object.entries(previous.stats || {}).forEach(([id, stat]) => {
+      if (!questionMap.has(id)) return;
+      const existing = mergedStats[id];
+      mergedStats[id] = existing
+        ? {
+            attempts: (existing.attempts || 0) + (stat.attempts || 0),
+            correct: (existing.correct || 0) + (stat.correct || 0),
+            wrong: (existing.wrong || 0) + (stat.wrong || 0)
+          }
+        : { ...stat };
+    });
+
+    const history = [...(current.history || []), ...(previous.history || [])]
+      .filter((item, index, items) => items.findIndex((candidate) => candidate.id === item.id) === index)
+      .sort((left, right) => (right.date || 0) - (left.date || 0))
+      .slice(0, 30);
+
+    return {
+      ...emptyStore(),
+      ...current,
+      stats: mergedStats,
+      bookmarks: [...new Set([...(current.bookmarks || []), ...(previous.bookmarks || [])])]
+        .filter((id) => questionMap.has(id)),
+      history,
+      activeSession: current.activeSession || previous.activeSession || null,
+      migration: {
+        source: LEGACY_STORE_KEY,
+        action: "imported",
+        answered: legacyAnsweredCount,
+        attempts: legacyAttemptCount,
+        date: Date.now()
+      }
+    };
   };
 
   const escapeHtml = (value) => String(value)
@@ -262,6 +316,14 @@
     ` : "";
     const ios = /iphone|ipad|ipod/i.test(navigator.userAgent)
       && !window.matchMedia("(display-mode: standalone)").matches;
+    const legacyImportButton = store.migration?.action === "skipped" && hasLegacyResults
+      ? `
+        <button class="legacy-import-button" type="button" data-action="request-legacy-import">
+          <strong>前回の学習結果を反映する</strong>
+          <span>${legacyAnsweredCount}問分・累計${legacyAttemptCount}回答の記録を保存中</span>
+        </button>
+      `
+      : "";
 
     app.innerHTML = `
       <section class="hero">
@@ -279,6 +341,7 @@
           </div>
           <div class="ring" style="--progress:${(stats.studied / questions.length) * 100}%"><span>${stats.studied}<small>/${questions.length}</small></span></div>
         </section>
+        ${legacyImportButton}
 
         <div class="section-heading"><h2>学習メニュー</h2><small>${questions.length} QUESTIONS</small></div>
         <section class="mode-grid">
@@ -319,6 +382,7 @@
         <div class="disclaimer"><b>注</b><span>本アプリの問題は学習用オリジナルです。公式問題ではありません。法令・基準を実務で適用する際は、必ず最新の公式資料をご確認ください。</span></div>
       </div>
     `;
+    if (legacyMigrationPending) requestAnimationFrame(() => openLegacyResultsPrompt());
   }
 
   const filterButton = (icon, title, subtitle, count, filter) => `
@@ -721,10 +785,66 @@
     `);
   };
 
-  const openModal = (content) => {
+  const openModal = (content, { dismissible = true } = {}) => {
+    modalRoot.dataset.dismissible = String(dismissible);
     modalRoot.innerHTML = `<section class="modal" role="dialog" aria-modal="true"><div class="modal-grip"></div>${content}</section>`;
   };
-  const closeModal = () => { modalRoot.innerHTML = ""; };
+  const closeModal = () => {
+    modalRoot.innerHTML = "";
+    delete modalRoot.dataset.dismissible;
+  };
+
+  function openLegacyResultsPrompt({ revisit = false } = {}) {
+    if (!hasLegacyResults) return;
+    openModal(`
+      <div class="migration-badge">保存データを確認しました</div>
+      <h2>前回の学習結果を反映しますか？</h2>
+      <p>これまでに学習した<strong>${legacyAnsweredCount}問分</strong>・累計<strong>${legacyAttemptCount}回答</strong>の正解・誤答・見直し記録が見つかりました。</p>
+      <div class="migration-summary">
+        <span><strong>${legacyAnsweredCount}</strong>問分</span>
+        <span><strong>${legacyAttemptCount}</strong>回答</span>
+      </div>
+      <div class="modal-actions">
+        <button class="wide-button primary" type="button" data-action="import-legacy-results">反映する</button>
+        ${revisit
+          ? `<button class="wide-button" type="button" data-action="close-modal">戻る</button>`
+          : `<button class="wide-button" type="button" data-action="skip-legacy-results">新しく始める</button>`}
+      </div>
+      <small class="migration-note">「新しく始める」を選んでも、前回の保存データは削除しません。ホーム画面から後で反映できます。</small>
+    `, { dismissible: revisit });
+  }
+
+  const importLegacyResults = () => {
+    if (!legacyStore) return;
+    store = mergeStores(store, legacyStore);
+    session = store.activeSession && Array.isArray(store.activeSession.ids)
+      ? store.activeSession
+      : null;
+    legacyMigrationPending = false;
+    saveStore();
+    closeModal();
+    render();
+    showToast(`${legacyAnsweredCount}問分の学習結果を反映しました`);
+  };
+
+  const skipLegacyResults = () => {
+    store = {
+      ...emptyStore(),
+      migration: {
+        source: LEGACY_STORE_KEY,
+        action: "skipped",
+        answered: legacyAnsweredCount,
+        attempts: legacyAttemptCount,
+        date: Date.now()
+      }
+    };
+    session = null;
+    legacyMigrationPending = false;
+    saveStore();
+    closeModal();
+    render();
+    showToast("新しい300問として開始します");
+  };
 
   const toggleReview = () => {
     const id = session.ids[session.index];
@@ -794,7 +914,7 @@
   document.addEventListener("click", (event) => {
     const button = event.target.closest("[data-action]");
     if (!button) {
-      if (event.target === modalRoot) closeModal();
+      if (event.target === modalRoot && modalRoot.dataset.dismissible !== "false") closeModal();
       return;
     }
     const { action } = button.dataset;
@@ -829,6 +949,9 @@
     else if (action === "confirm-exit-session") showOutro();
     else if (action === "request-study-reset") requestStudyReset();
     else if (action === "confirm-study-reset") resetStudy();
+    else if (action === "request-legacy-import") openLegacyResultsPrompt({ revisit: true });
+    else if (action === "import-legacy-results") importLegacyResults();
+    else if (action === "skip-legacy-results") skipLegacyResults();
     else if (action === "review-results") reviewResults();
     else if (action === "retry-wrong") retryWrong();
     else if (action === "show-history") { currentView = "history"; render(); }
