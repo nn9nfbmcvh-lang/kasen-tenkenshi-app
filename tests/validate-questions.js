@@ -4,6 +4,7 @@ global.window = global;
 require(path.resolve(__dirname, "..", "photo-questions.js"));
 require(path.resolve(__dirname, "..", "questions.js"));
 require(path.resolve(__dirname, "..", "extended-questions.js"));
+require(path.resolve(__dirname, "..", "v500-questions.js"));
 
 const questions = global.QUESTION_BANK;
 const failures = [];
@@ -14,9 +15,9 @@ const required = [
 ];
 
 if (!Array.isArray(questions)) failures.push("QUESTION_BANK must be an array");
-if (questions.length !== 300) failures.push(`Expected 300 questions, got ${questions.length}`);
+if (questions.length !== 500) failures.push(`Expected 500 questions, got ${questions.length}`);
 
-const expectedTypes = { 写真: 165, イラスト: 0, 知識: 135 };
+const expectedTypes = { 写真: 220, イラスト: 0, 知識: 280 };
 for (const [type, expected] of Object.entries(expectedTypes)) {
   const actual = questions.filter((question) => question.type === type).length;
   if (actual !== expected) failures.push(`${type}: expected ${expected}, got ${actual}`);

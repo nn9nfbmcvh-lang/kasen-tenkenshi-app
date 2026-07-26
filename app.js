@@ -9,8 +9,8 @@
   const toastElement = document.querySelector("#toast");
   const networkBadge = document.querySelector("#networkBadge");
   const installButton = document.querySelector("#installButton");
-  const LEGACY_STORE_KEY = "kasen-tenkenshi-v1";
-  const STORE_KEY = "kasen-tenkenshi-v300";
+  const LEGACY_STORE_KEYS = ["kasen-tenkenshi-v300", "kasen-tenkenshi-v1"];
+  const STORE_KEY = "kasen-tenkenshi-v500";
   const AUTH_KEY = "kasen-tenkenshi-auth";
   const APP_PASSWORD = "4151";
   const INTRO_MESSAGE = "今日も一緒に、河川を見る目を鍛えよう！\n坂田さん　がんばって!!\n応援してるから";
@@ -41,7 +41,11 @@
   };
 
   const savedStore = loadStore(STORE_KEY);
-  const legacyStore = loadStore(LEGACY_STORE_KEY);
+  const legacyEntry = LEGACY_STORE_KEYS
+    .map((key) => ({ key, store: loadStore(key) }))
+    .find((entry) => entry.store);
+  const legacyStoreKey = legacyEntry?.key || LEGACY_STORE_KEYS[0];
+  const legacyStore = legacyEntry?.store || null;
   const legacyStats = Object.entries(legacyStore?.stats || {})
     .filter(([id, stat]) => questionMap.has(id) && (stat?.attempts || 0) > 0);
   const legacyAnsweredCount = legacyStats.length;
@@ -93,7 +97,7 @@
       history,
       activeSession: current.activeSession || previous.activeSession || null,
       migration: {
-        source: LEGACY_STORE_KEY,
+        source: legacyStoreKey,
         action: "imported",
         answered: legacyAnsweredCount,
         attempts: legacyAttemptCount,
@@ -218,7 +222,7 @@
           </span>
           <p class="eyebrow">River inspection study</p>
           <h1>河川点検士</h1>
-          <p>合格するための300問</p>
+          <p>合格するための500問</p>
           <form id="passwordForm">
             <label for="appPassword">パスワード</label>
             <div class="password-entry">
@@ -260,7 +264,7 @@
         </div>
         <div class="intro-title">
           <small>RIVER INSPECTION STUDY</small>
-          <h1>河川点検士<br><em>合格するための300問</em></h1>
+          <h1>河川点検士<br><em>合格するための500問</em></h1>
           <span>タップしてはじめる</span>
         </div>
       </section>
@@ -329,7 +333,7 @@
       <section class="hero">
         <p class="eyebrow">River inspection study</p>
         <h1>現場を見る目を、<br><em>一問ずつ。</em></h1>
-        <p class="hero-copy">写真165問・知識135問で、判断の根拠まで身につける。</p>
+        <p class="hero-copy">写真220問・知識280問で、判断の根拠まで身につける。</p>
         <span class="hero-version">Ver. 1.0</span>
       </section>
       <div class="home-content">
@@ -831,7 +835,7 @@
     store = {
       ...emptyStore(),
       migration: {
-        source: LEGACY_STORE_KEY,
+        source: legacyStoreKey,
         action: "skipped",
         answered: legacyAnsweredCount,
         attempts: legacyAttemptCount,
@@ -843,7 +847,7 @@
     saveStore();
     closeModal();
     render();
-    showToast("新しい300問として開始します");
+    showToast("新しい500問として開始します");
   };
 
   const toggleReview = () => {
