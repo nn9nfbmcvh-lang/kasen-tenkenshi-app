@@ -215,12 +215,12 @@
       if (!message || index >= INTRO_MESSAGE.length) {
         clearInterval(typewriterTimerId);
         typewriterTimerId = null;
+        splashTimerId = setTimeout(finishSplash, 1000);
         return;
       }
       message.textContent += INTRO_MESSAGE[index];
       index += 1;
     }, 55);
-    splashTimerId = setTimeout(finishSplash, 3000);
   }
 
   const finishSplash = () => {
@@ -308,6 +308,10 @@
           ${filterButton("90", "出題傾向90%以上", "頻出テーマを集中演習", questions.filter((q) => q.trend >= 90).length, "trend")}
         </section>
 
+        <button class="study-reset-button" type="button" data-action="request-study-reset">
+          <strong>学習をリセット</strong>
+          <span>成績・見直し・途中の学習を消去</span>
+        </button>
         ${ios ? `<button class="ios-install" type="button" data-action="ios-install">iPhoneのホーム画面に追加する方法</button>` : ""}
         <div class="disclaimer"><b>注</b><span>本アプリの問題は学習用オリジナルです。公式問題ではありません。法令・基準を実務で適用する際は、必ず最新の公式資料をご確認ください。</span></div>
       </div>
@@ -538,6 +542,27 @@
         <button class="wide-button" type="button" data-action="close-modal">${modeLabel}を続ける</button>
       </div>
     `);
+  };
+
+  const requestStudyReset = () => {
+    openModal(`
+      <h2>学習記録をリセットしますか？</h2>
+      <p>成績、回答履歴、見直しリスト、途中の学習をすべて消去します。この操作は元に戻せません。</p>
+      <div class="modal-actions">
+        <button class="wide-button danger" type="button" data-action="confirm-study-reset">リセットする</button>
+        <button class="wide-button" type="button" data-action="close-modal">キャンセル</button>
+      </div>
+    `);
+  };
+
+  const resetStudy = () => {
+    session = null;
+    store = emptyStore();
+    saveStore();
+    closeModal();
+    currentView = "home";
+    render();
+    showToast("学習記録をリセットしました");
   };
 
   const showOutro = () => {
@@ -797,6 +822,8 @@
     else if (action === "finish-session") finishSession();
     else if (action === "exit-session") requestSessionExit();
     else if (action === "confirm-exit-session") showOutro();
+    else if (action === "request-study-reset") requestStudyReset();
+    else if (action === "confirm-study-reset") resetStudy();
     else if (action === "review-results") reviewResults();
     else if (action === "retry-wrong") retryWrong();
     else if (action === "show-history") { currentView = "history"; render(); }
