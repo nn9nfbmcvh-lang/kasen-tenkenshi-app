@@ -1,6 +1,7 @@
 const path = require("path");
 
 global.window = global;
+require(path.resolve(__dirname, "..", "photo-questions.js"));
 require(path.resolve(__dirname, "..", "questions.js"));
 
 const questions = global.QUESTION_BANK;
@@ -46,6 +47,16 @@ for (const question of questions) {
   }
   if (question.type !== "知識" && !question.scene) {
     failures.push(`${question.id}: visual question requires a scene`);
+  }
+  if (question.type === "写真") {
+    if (typeof question.scene !== "object" || !question.scene.src || !question.scene.sourceUrl) {
+      failures.push(`${question.id}: photo question requires image and source metadata`);
+    } else {
+      const imagePath = path.resolve(__dirname, "..", question.scene.src.replace(/^\.\//, ""));
+      if (!require("fs").existsSync(imagePath)) {
+        failures.push(`${question.id}: image file does not exist (${question.scene.src})`);
+      }
+    }
   }
   if (!question.related.length) {
     failures.push(`${question.id}: at least one related question is required`);

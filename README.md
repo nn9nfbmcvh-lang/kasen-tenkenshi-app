@@ -45,7 +45,7 @@ python -m http.server 4173
 
 ## 問題データ
 
-問題は `questions.js` に格納しています。各問題は次の項目を持ちます。
+写真問題は `photo-questions.js`、イラスト・知識問題は `questions.js` に格納しています。各問題は次の項目を持ちます。
 
 ```text
 id / number / type / question / choices / answer / explanation
@@ -58,6 +58,16 @@ keywords / related / scene
 ```powershell
 node tests/validate-questions.js
 ```
+
+## 写真の出典
+
+写真問題40問は、国土交通省「堤防等河川管理施設及び河道の点検・評価要領 参考資料」の事例写真を、表示用にサイズ・圧縮率を調整して使用しています。
+
+- 出典：[国土交通省「堤防等河川管理施設及び河道の点検・評価要領 参考資料」](https://www.mlit.go.jp/river/shishin_guideline/kasen/pdf/08_teiboukadou_tenkenkekka_sankou.pdf)
+- 利用条件：[国土交通省 リンク・著作権・免責事項](https://www.mlit.go.jp/link.html)
+- 各写真の出典ページは、アプリの写真直下に表示しています。
+
+写真の抽出は `tools/extract-mlit-photos.py` で再現できます。元PDFはリポジトリへ含めません。
 
 ## GitHub Pages
 
@@ -72,4 +82,4 @@ node tests/validate-questions.js
 
 ## 注意
 
-本アプリに収録された問題・画像は学習用のオリジナルです。試験実施団体や行政機関が提供する公式問題ではありません。法令・基準を実務で適用する際は、必ず最新の公式資料と河川管理者の指示を確認してください。
+本アプリの問題文・選択肢・解説は学習用に作成したオリジナルであり、公式問題ではありません。写真は上記の国土交通省資料を加工して使用しています。本アプリは国土交通省や試験実施団体が作成・監修したものではありません。法令・基準を実務で適用する際は、必ず最新の公式資料と河川管理者の指示を確認してください。

@@ -293,6 +293,11 @@
     ]
   ];
 
+  if (!Array.isArray(window.MLIT_PHOTO_ROWS) || window.MLIT_PHOTO_ROWS.length !== 40) {
+    throw new Error("写真問題データ40問を読み込めませんでした。");
+  }
+  photoRows.splice(0, photoRows.length, ...window.MLIT_PHOTO_ROWS);
+
   const illustrationRows = [
     [
       "図は堤防の横断面を示す。河川の水が接する側（A）の名称はどれか。",
