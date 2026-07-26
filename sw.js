@@ -1,19 +1,20 @@
-const CACHE_NAME = "kasen-tenkenshi-v1.4.0";
+const CACHE_NAME = "kasen-tenkenshi-v1.4.1";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=1.4.0",
-  "./photo-questions.js?v=1.4.0",
-  "./questions.js?v=1.4.0",
-  "./extended-questions.js?v=1.4.0",
-  "./app.js?v=1.4.0",
-  "./manifest.webmanifest?v=1.4.0",
-  "./assets/icon.svg?v=1.4.0",
-  "./assets/icon-180.png?v=1.4.0",
+  "./styles.css?v=1.4.1",
+  "./photo-questions.js?v=1.4.1",
+  "./questions.js?v=1.4.1",
+  "./extended-questions.js?v=1.4.1",
+  "./app.js?v=1.4.1",
+  "./manifest.webmanifest?v=1.4.1",
+  "./assets/icon.svg?v=1.4.1",
+  "./assets/icon-180.png?v=1.4.1",
   "./assets/icon-192.png",
   "./assets/icon-512.png",
   "./assets/launch.jpg",
   "./assets/finish.jpg",
+  "./assets/password-background.png",
   ...Array.from({ length: 55 }, (_, index) => `./assets/questions/Q${String(index + 1).padStart(3, "0")}.jpg`)
 ];
 

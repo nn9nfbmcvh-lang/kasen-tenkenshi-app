@@ -254,7 +254,8 @@ main { min-height: calc(100dvh - 74px); padding: 0 18px calc(92px + var(--safe-b
   overflow: hidden;
   color: #fff;
   background:
-    radial-gradient(circle at 85% 18%, rgba(109, 204, 185, .18), transparent 22rem),
+    linear-gradient(90deg, rgba(7, 39, 35, .82), rgba(7, 39, 35, .62) 48%, rgba(7, 31, 29, .74)),
+    url("./assets/password-background.png") 42% center / cover no-repeat,
     var(--river-deep);
 }
 .password-screen::after {
@@ -269,14 +270,14 @@ main { min-height: calc(100dvh - 74px); padding: 0 18px calc(92px + var(--safe-b
   border-radius: 50%;
   box-shadow: 0 -25px 0 rgba(143, 212, 198, .05), 0 -52px 0 rgba(143, 212, 198, .035);
 }
-.password-card { position: relative; z-index: 1; width: min(100%, 430px); }
-.password-mark { display: grid; width: 62px; height: 62px; margin-bottom: 28px; place-items: center; border: 1px solid rgba(255,255,255,.2); border-radius: 20px; background: rgba(255,255,255,.08); }
+.password-card { position: relative; z-index: 1; width: min(100%, 430px); text-shadow: 0 2px 16px rgba(0,0,0,.45); }
+.password-mark { display: grid; width: 62px; height: 62px; margin-bottom: 28px; place-items: center; border: 1px solid rgba(255,255,255,.32); border-radius: 20px; background: rgba(6,39,35,.48); backdrop-filter: blur(10px); }
 .password-mark svg { width: 38px; fill: none; stroke: #90d7c7; stroke-width: 2.1; stroke-linecap: round; }
 .password-card h1 { margin: 0; font-size: clamp(32px, 10vw, 48px); letter-spacing: .08em; }
 .password-card > p:not(.eyebrow) { margin: 8px 0 38px; color: #b9d7d1; font-size: 14px; font-weight: 700; letter-spacing: .06em; }
 .password-card form label { display: block; margin: 0 0 8px 2px; color: #b9d7d1; font-size: 11px; font-weight: 700; }
 .password-entry { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
-.password-entry input { width: 100%; min-width: 0; height: 54px; padding: 0 16px; color: #fff; font-size: 20px; letter-spacing: .2em; border: 1px solid rgba(255,255,255,.24); border-radius: 15px; outline: 0; background: rgba(255,255,255,.08); }
+.password-entry input { width: 100%; min-width: 0; height: 54px; padding: 0 16px; color: #fff; font-size: 20px; letter-spacing: .2em; border: 1px solid rgba(255,255,255,.38); border-radius: 15px; outline: 0; background: rgba(5,35,32,.55); backdrop-filter: blur(10px); }
 .password-entry input:focus { border-color: #8fd4c6; box-shadow: 0 0 0 3px rgba(143,212,198,.13); }
 .password-entry input[aria-invalid="true"] { border-color: #ef9b89; }
 .password-entry button { min-width: 96px; color: var(--river-deep); font-weight: 800; border: 0; border-radius: 15px; background: #90d7c7; cursor: pointer; }
@@ -327,7 +328,7 @@ main { min-height: calc(100dvh - 74px); padding: 0 18px calc(92px + var(--safe-b
   top: max(68px, calc(env(safe-area-inset-top) + 44px));
   left: max(18px, env(safe-area-inset-left));
   width: min(72vw, 310px);
-  white-space: pre-line;
+  white-space: pre-wrap;
 }
 .intro-bubble::after {
   position: absolute;

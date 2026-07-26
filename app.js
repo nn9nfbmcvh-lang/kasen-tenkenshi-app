@@ -12,7 +12,7 @@
   const STORE_KEY = "kasen-tenkenshi-v1";
   const AUTH_KEY = "kasen-tenkenshi-auth";
   const APP_PASSWORD = "4151";
-  const INTRO_MESSAGE = "今日も一緒に、河川を見る目を鍛えよう！\n坂田さん　がんばって!!\n応援してるから";
+  const INTRO_MESSAGE = "今日も一緒に、河川を見る目を鍛えよう！\n\n坂田さん　がんばって!!\n\n応援してるから";
   const OUTRO_MESSAGE = "おつかれさま！ひと休みして、また挑戦しよう！";
   const letters = ["A", "B", "C", "D"];
   let timerId = null;
@@ -217,7 +217,7 @@
       if (!message || index >= INTRO_MESSAGE.length) {
         clearInterval(typewriterTimerId);
         typewriterTimerId = null;
-        splashTimerId = setTimeout(finishSplash, 1000);
+        splashTimerId = setTimeout(finishSplash, 2000);
         return;
       }
       message.textContent += INTRO_MESSAGE[index];
