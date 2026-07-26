@@ -88,6 +88,7 @@ main { min-height: calc(100dvh - 74px); padding: 0 18px calc(92px + var(--safe-b
 .mode-card.primary { color: #fff; background: var(--river); }
 .mode-card .mode-icon { display: grid; width: 43px; height: 43px; margin-bottom: 21px; place-items: center; color: var(--river); border-radius: 14px; background: var(--river-pale); }
 .mode-card.primary .mode-icon { color: #fff; background: rgba(255,255,255,.16); }
+.mode-card .mode-default { position: absolute; top: 15px; right: 15px; padding: 5px 8px; color: var(--river-deep); font-size: 9px; font-weight: 800; border-radius: 99px; background: #a2d8cd; }
 .mode-card svg { width: 23px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .mode-card strong { display: block; margin-bottom: 8px; font-size: 17px; }
 .mode-card p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.65; }
