@@ -21,6 +21,7 @@
     <button onclick="unlockApp()">開始</button>
     <p class="note">初期パスワード：4151</p>
   </section>
+
   <section id="home" class="card hidden">
     <h2>学習モード</h2>
     <button onclick="startQuiz('all')">30問 模擬試験</button>
@@ -32,23 +33,33 @@
 
   <section id="quiz" class="card hidden">
     <div class="topline"><span id="progress"></span><span id="category"></span></div>
+    <div class="metaBox">
+      <div id="difficulty"></div>
+      <div id="trend"></div>
+      <small>※想定出題傾向は公式公表値ではなく、学習優先度の目安です。</small>
+    </div>
     <h2 id="question"></h2>
     <div id="choices"></div>
+    <label class="reviewLabel"><input id="reviewCheck" type="checkbox" onchange="toggleReview()"> 後で見直す</label>
+    <div id="questionNav" class="questionNav"></div>
     <div id="feedback" class="hidden"></div>
-    <div class="nav">
-      <button id="nextBtn" class="hidden" onclick="nextQuestion()">次へ</button>
-      <button class="secondary" onclick="quitQuiz()">終了</button>
+    <div class="nav twoCol">
+      <button id="prevBtn" class="secondary" onclick="previousQuestion()">前へ</button>
+      <button id="nextBtn" onclick="nextQuestion()">次へ</button>
     </div>
+    <button class="secondary" onclick="confirmFinish()">試験を終了して採点</button>
   </section>
 
   <section id="result" class="card hidden">
     <h2>結果</h2>
     <div id="score"></div>
-    <button onclick="startQuiz('wrong')">間違い問題を復習</button>
+    <div id="resultDetails"></div>
+    <button id="retryWrongBtn" onclick="retryLastWrong()">間違えた問題だけ再出題</button>
     <button class="secondary" onclick="showHome()">ホームへ</button>
   </section>
 </main>
 <footer>オリジナル学習問題／公式試験問題ではありません</footer>
 <script src="app.js"></script>
+<script src="exam.js"></script>
 </body>
 </html>
