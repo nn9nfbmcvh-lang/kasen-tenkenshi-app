@@ -12,7 +12,7 @@
   const STORE_KEY = "kasen-tenkenshi-v1";
   const AUTH_KEY = "kasen-tenkenshi-auth";
   const APP_PASSWORD = "4151";
-  const INTRO_MESSAGE = "今日も一緒に、河川を見る目を鍛えよう！";
+  const INTRO_MESSAGE = "坂田さん　がんばって!!\n応援してるから";
   const OUTRO_MESSAGE = "おつかれさま！ひと休みして、また挑戦しよう！";
   const letters = ["A", "B", "C", "D"];
   let timerId = null;
@@ -162,7 +162,7 @@
           </span>
           <p class="eyebrow">River inspection study</p>
           <h1>河川点検士</h1>
-          <p>合格するための500問</p>
+          <p>合格するための100問</p>
           <form id="passwordForm">
             <label for="appPassword">パスワード</label>
             <div class="password-entry">
@@ -204,7 +204,7 @@
         </div>
         <div class="intro-title">
           <small>RIVER INSPECTION STUDY</small>
-          <h1>河川点検士<br><em>合格するための500問</em></h1>
+          <h1>河川点検士<br><em>合格するための100問</em></h1>
           <span>タップしてはじめる</span>
         </div>
       </section>
