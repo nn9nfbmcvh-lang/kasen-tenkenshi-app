@@ -1,19 +1,19 @@
-const CACHE_NAME = "kasen-tenkenshi-v1.3.2";
+const CACHE_NAME = "kasen-tenkenshi-v1.3.4";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=1.3.2",
-  "./photo-questions.js?v=1.3.2",
-  "./questions.js?v=1.3.2",
-  "./app.js?v=1.3.2",
-  "./manifest.webmanifest?v=1.3.2",
-  "./assets/icon.svg?v=1.3.2",
-  "./assets/icon-180.png?v=1.3.2",
+  "./styles.css?v=1.3.4",
+  "./photo-questions.js?v=1.3.4",
+  "./questions.js?v=1.3.4",
+  "./app.js?v=1.3.4",
+  "./manifest.webmanifest?v=1.3.4",
+  "./assets/icon.svg?v=1.3.4",
+  "./assets/icon-180.png?v=1.3.4",
   "./assets/icon-192.png",
   "./assets/icon-512.png",
   "./assets/launch.jpg",
   "./assets/finish.jpg",
-  ...Array.from({ length: 40 }, (_, index) => `./assets/questions/Q${String(index + 1).padStart(3, "0")}.jpg`)
+  ...Array.from({ length: 55 }, (_, index) => `./assets/questions/Q${String(index + 1).padStart(3, "0")}.jpg`)
 ];
 
 self.addEventListener("install", (event) => {

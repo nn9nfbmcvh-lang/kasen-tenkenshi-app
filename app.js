@@ -265,7 +265,7 @@
       <section class="hero">
         <p class="eyebrow">River inspection study</p>
         <h1>現場を見る目を、<br><em>一問ずつ。</em></h1>
-        <p class="hero-copy">写真・図解・知識の100問で、判断の根拠まで身につける。</p>
+        <p class="hero-copy">写真55問・知識45問で、判断の根拠まで身につける。</p>
         <span class="hero-version">Ver. 1.0</span>
       </section>
       <div class="home-content">
@@ -289,7 +289,7 @@
             <p>分野を選んで演習<br>回答表示後に正解と解説</p>
             <span class="arrow">→</span>
           </button>
-          <button class="mode-card" type="button" data-action="start-exam">
+          <button class="mode-card exam-card" type="button" data-action="start-exam">
             <span class="mode-icon">
               <svg viewBox="0 0 24 24"><path d="M7 3h10v3H7zM6 5h12v16H6zM9 10h6m-6 4h6m-6 4h4"/></svg>
             </span>
@@ -815,15 +815,18 @@
   function renderVisual(question) {
     if (question.type === "写真") {
       const photo = question.scene;
+      const generatedCaption = photo.generated
+        ? `<figcaption class="photo-source">問題文から推定して作成したAI参考写真です。</figcaption>`
+        : `<figcaption class="photo-source">
+            出典：<a href="${escapeHtml(photo.sourceUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(photo.sourceTitle)} p.${photo.sourcePage}（国土交通省）</a>を加工して作成
+          </figcaption>`;
       return `
         <figure class="photo-figure">
           <div class="visual-panel photo-scene">
             <img class="question-photo" src="${escapeHtml(photo.src)}" alt="${escapeHtml(photo.alt)}" decoding="async">
-            <span class="visual-label">実写真</span>
+            <span class="visual-label">${photo.generated ? "AI参考写真" : "実写真"}</span>
           </div>
-          <figcaption class="photo-source">
-            出典：<a href="${escapeHtml(photo.sourceUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(photo.sourceTitle)} p.${photo.sourcePage}（国土交通省）</a>を加工して作成
-          </figcaption>
+          ${generatedCaption}
         </figure>
       `;
     }
