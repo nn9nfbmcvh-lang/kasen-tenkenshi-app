@@ -144,10 +144,14 @@
       for(let i=1;i<=N;i++)document.getElementById('numberMark'+i).textContent=document.getElementById('no'+i).value
     }
 
+    function expectedNumbers(captainNumber='1'){
+      return [captainNumber,...Array.from({length:N},(_,index)=>String(index+1)).filter(number=>number!==captainNumber)]
+    }
+
     function arrangeNumbersAfterCaptain(){
       const captainNumber=document.getElementById('no1').value;
-      const remaining=Array.from({length:N},(_,index)=>String(index+1)).filter(number=>number!==captainNumber);
-      for(let i=2;i<=N;i++)document.getElementById('no'+i).value=remaining[i-2];
+      const numbers=expectedNumbers(captainNumber);
+      for(let i=1;i<=N;i++)document.getElementById('no'+i).value=numbers[i-1];
       updateNumberMarks()
     }
 
@@ -212,8 +216,65 @@
       requestAnimationFrame(fitAllPlayerNames)
     }
 
-    function enc(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))}
-    function dec(s){return JSON.parse(decodeURIComponent(escape(atob(s))))}
+    function compactData(d){
+      const compact={v:2};
+      const fields=[
+        ['a','address'],['r','responsible'],['p','phone'],['t','team'],
+        ['c','coach'],['s','assistantCoach'],['m','manager']
+      ];
+      fields.forEach(([short,long])=>{if(d[long])compact[short]=d[long]});
+      if(d.category&&d.category!=='一般')compact.g=d.category;
+
+      const captainNumber=d.no1||'1';
+      if(captainNumber!=='1')compact.n=captainNumber;
+      const defaults=expectedNumbers(captainNumber);
+      const players=[];
+      for(let i=1;i<=N;i++){
+        const name=d['name'+i]||'';
+        const age=d['age'+i]||'';
+        const number=d['no'+i]===defaults[i-1]?'':d['no'+i];
+        if(name||age||number){
+          const row=[i,name,age,number];
+          while(row.length>1&&row[row.length-1]==='')row.pop();
+          players.push(row)
+        }
+      }
+      if(players.length)compact.x=players;
+      return compact
+    }
+
+    function expandData(compact){
+      if(!compact||compact.v!==2)return compact;
+      const d={
+        address:compact.a||'',responsible:compact.r||'',phone:compact.p||'',
+        team:compact.t||'',coach:compact.c||'',assistantCoach:compact.s||'',manager:compact.m||'',
+        category:compact.g||'一般'
+      };
+      const captainNumber=String(compact.n||1);
+      const numbers=expectedNumbers(captainNumber);
+      for(let i=1;i<=N;i++){
+        d['no'+i]=numbers[i-1];
+        d['name'+i]='';
+        d['age'+i]=''
+      }
+      (compact.x||[]).forEach(([i,name,age,number])=>{
+        if(i<1||i>N)return;
+        if(name)d['name'+i]=name;
+        if(age)d['age'+i]=String(age);
+        if(number)d['no'+i]=String(number)
+      });
+      return d
+    }
+
+    function enc(o){
+      return btoa(unescape(encodeURIComponent(JSON.stringify(o))))
+        .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')
+    }
+    function dec(s){
+      s=s.replace(/-/g,'+').replace(/_/g,'/');
+      while(s.length%4)s+='=';
+      return JSON.parse(decodeURIComponent(escape(atob(s))))
+    }
 
     function saveLocal(){
       localStorage.setItem('momiji-form',JSON.stringify(data()));
@@ -222,7 +283,7 @@
 
     function makeShare(){
       let u=new URL(location.href);
-      u.hash='d='+encodeURIComponent(enc(data()));
+      u.hash='d='+enc(compactData(data()));
       let s=u.toString();
       document.getElementById('shareUrl').value=s;
       document.getElementById('share').style.display='block';
@@ -263,7 +324,7 @@
 
     (()=>{
       if(location.hash.startsWith('#d=')){
-        try{setData(dec(decodeURIComponent(location.hash.slice(3))));return}catch(e){}
+        try{setData(expandData(dec(decodeURIComponent(location.hash.slice(3)))));return}catch(e){}
       }
       let s=localStorage.getItem('momiji-form');
       if(s)try{setData(JSON.parse(s))}catch(e){}
