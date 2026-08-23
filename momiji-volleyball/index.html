@@ -30,7 +30,7 @@
     .players th:nth-child(2){width:50%}
     .players th:nth-child(3){width:30%}
     .players td{height:64px}
-    .players input{font-size:19px}
+    .players input,.players select{font-size:19px}
     .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:14px 0}
     .actions button{border:0;border-radius:10px;background:#222;color:#fff;font-weight:700;font-size:16px;padding:12px 15px}
     .actions button.alt{background:#666}
@@ -52,7 +52,7 @@
       .players{margin-top:18px}
       .players th{height:48px}
       .players td{height:54px}
-      .players input{font-size:15px}
+      .players input,.players select{font-size:15px}
     }
     @media print{body{background:#fff}.wrap{max-width:none;padding:0}.paper{border:0;border-radius:0}.actions,.share{display:none!important}}
   </style>
@@ -110,10 +110,12 @@
   </div>
   <script>
     const N=12,rows=document.getElementById('rows');
+    const numberOptions=Array.from({length:N},(_,index)=>`<option value="${index+1}">${index+1}</option>`).join('');
     for(let i=1;i<=N;i++){
       let tr=document.createElement('tr');
-      tr.innerHTML=`<td><input id="no${i}" class="txt" inputmode="numeric"></td><td><input id="name${i}" class="txt"></td><td><input id="age${i}" class="txt" inputmode="numeric"></td>`;
-      rows.appendChild(tr)
+      tr.innerHTML=`<td><select id="no${i}" class="txt" aria-label="${i}人目の背番号">${numberOptions}</select></td><td><input id="name${i}" class="txt"></td><td><input id="age${i}" class="txt" inputmode="numeric"></td>`;
+      rows.appendChild(tr);
+      document.getElementById('no'+i).value=String(i)
     }
 
     const ids=['address','responsible','phone','team','coach','assistantCoach','manager'];
@@ -171,6 +173,7 @@
     function clearAll(){
       if(!confirm('入力内容をすべて消しますか？'))return;
       ids.forEach(x=>document.getElementById(x).value='');
+      for(let i=1;i<=N;i++)document.getElementById('no'+i).value=String(i);
       document.querySelector('input[value="一般"]').checked=true;
       localStorage.removeItem('momiji-form')
     }
