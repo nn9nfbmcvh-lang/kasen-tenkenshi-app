@@ -35,6 +35,7 @@
     .players .player-name{text-align:left;padding:0 8px 0 2em}
     .players .age-select{color:#222}
     .players .age-select:invalid{color:#aaa}
+    .players .age-select.age-empty{color:#aaa}
     .players .age-select option{color:#222}
     .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:14px 0}
     .actions button{border:0;border-radius:10px;background:#222;color:#fff;font-weight:700;font-size:16px;padding:12px 15px}
@@ -118,16 +119,30 @@
   <script>
     const N=12,rows=document.getElementById('rows');
     const numberOptions=Array.from({length:N},(_,index)=>`<option value="${index+1}">${index+1}</option>`).join('');
-    const ageOptions='<option value="" disabled selected>50</option>'+Array.from({length:99},(_,index)=>`<option value="${index+1}">${index+1}</option>`).join('');
+    const ageOptions=Array.from({length:99},(_,index)=>{
+      const age=index+1;
+      const placeholder=age===50?'<option value="" disabled selected hidden>50</option>':'';
+      return placeholder+`<option value="${age}">${age}</option>`
+    }).join('');
     for(let i=1;i<=N;i++){
       let tr=document.createElement('tr');
-      tr.innerHTML=`<td><select id="no${i}" class="txt" aria-label="${i}人目の背番号">${numberOptions}</select></td><td><input id="name${i}" class="txt player-name" aria-label="${i}人目の選手氏名（みょうじ、スペース、なまえ）"></td><td><select id="age${i}" class="txt age-select" aria-label="${i}人目の年齢" required>${ageOptions}</select></td>`;
+      tr.innerHTML=`<td><select id="no${i}" class="txt" aria-label="${i}人目の背番号">${numberOptions}</select></td><td><input id="name${i}" class="txt player-name" aria-label="${i}人目の選手氏名（みょうじ、スペース、なまえ）"></td><td><select id="age${i}" class="txt age-select age-empty" aria-label="${i}人目の年齢" required>${ageOptions}</select></td>`;
       rows.appendChild(tr);
       document.getElementById('no'+i).value=String(i)
     }
 
     const ids=['address','responsible','phone','team','coach','assistantCoach','manager'];
     for(let i=1;i<=N;i++)ids.push('no'+i,'name'+i,'age'+i);
+
+    function updateAgeColors(){
+      document.querySelectorAll('.age-select').forEach(select=>{
+        select.classList.toggle('age-empty',select.value==='')
+      })
+    }
+
+    document.querySelectorAll('.age-select').forEach(select=>{
+      select.addEventListener('change',updateAgeColors)
+    });
 
     function fitPlayerName(input){
       input.style.fontSize='';
@@ -160,6 +175,7 @@
         let r=[...document.querySelectorAll('input[name=category]')].find(x=>x.value===d.category);
         if(r)r.checked=true
       }
+      updateAgeColors();
       requestAnimationFrame(fitAllPlayerNames)
     }
 
@@ -205,6 +221,7 @@
       }
       document.querySelector('input[value="一般"]').checked=true;
       localStorage.removeItem('momiji-form');
+      updateAgeColors();
       fitAllPlayerNames()
     }
 
