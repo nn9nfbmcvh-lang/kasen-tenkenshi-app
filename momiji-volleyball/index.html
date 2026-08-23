@@ -35,6 +35,7 @@
     .number-cell{position:relative}
     .number-cell select{position:absolute;z-index:3;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
     .number-cell::after{content:"";position:absolute;z-index:4;top:50%;right:4px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #222;transform:translateY(-25%);pointer-events:none}
+    .pdf-exporting .number-cell::after{display:none}
     .number-display{position:absolute;z-index:2;top:50%;left:50%;width:1.75em;height:1.75em;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;background:#fff;font-size:19px;line-height:1;pointer-events:none}
     .captain-number-mark{border:1.5px solid #222;border-radius:50%}
     .players .player-name{text-align:left;padding:0 8px 0 2em}
@@ -45,6 +46,7 @@
     .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:14px 0}
     .actions button{border:0;border-radius:10px;background:#222;color:#fff;font-weight:700;font-size:16px;padding:12px 15px}
     .actions button.alt{background:#666}
+    .actions button:disabled{opacity:.55;cursor:wait}
     .share{display:none;background:#fff;border-radius:12px;padding:14px;margin:0 auto 18px;max-width:730px}
     .share input{width:100%;padding:10px;border:1px solid #aaa;border-radius:8px}
     .qr{text-align:center;margin:12px}
@@ -112,6 +114,7 @@
     <div class="actions">
       <button onclick="saveLocal()">端末に保存</button>
       <button onclick="makeShare()">共有リンク・QR作成</button>
+      <button id="pdfButton" onclick="exportPdf()">PDF出力</button>
       <button class="alt" onclick="clearAll()">入力クリア</button>
     </div>
     <div id="share" class="share">
@@ -125,6 +128,7 @@
       <div class="small">入力内容を含むリンク・QRを共有できます。</div>
     </div>
   </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script>
     const N=12,rows=document.getElementById('rows');
     const numberOptions=Array.from({length:N},(_,index)=>`<option value="${index+1}">${index+1}</option>`).join('');
@@ -193,7 +197,7 @@
         const el=document.getElementById(x);
         d[x]=el.classList.contains('age-empty')?'':el.value
       });
-      d.category=document.querySelector('input[name=category]:checked').value;
+      d.category=document.querySelector('input[name=category]:checked')?.value||'一般';
       return d
     }
 
@@ -274,6 +278,64 @@
       s=s.replace(/-/g,'+').replace(/_/g,'/');
       while(s.length%4)s+='=';
       return JSON.parse(decodeURIComponent(escape(atob(s))))
+    }
+
+    function pdfFileName(){
+      const today=new Date();
+      const date=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('');
+      let team=document.getElementById('team').value.trim()
+        .replace(/[\\/:*?"<>|\u0000-\u001f]/g,'_')
+        .replace(/\s+/g,' ').replace(/[. ]+$/,'');
+      if(!team)team='チーム名未入力';
+      return `${date}_${team.slice(0,60)}.pdf`
+    }
+
+    async function exportPdf(){
+      const button=document.getElementById('pdfButton');
+      const label=button.textContent;
+      const selectedCategory=document.querySelector('input[name=category]:checked')?.value||'一般';
+      button.disabled=true;
+      button.textContent='PDF作成中…';
+      button.setAttribute('aria-busy','true');
+      document.body.classList.add('pdf-exporting');
+      try{
+        if(typeof html2pdf!=='function')throw new Error('PDF library is unavailable');
+        fitAllPlayerNames();
+        if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+        const worker=html2pdf().set({
+          margin:0,
+          html2canvas:{
+            scale:2,backgroundColor:'#fff',logging:false,useCORS:true,
+            windowWidth:Math.max(730,document.documentElement.clientWidth),scrollX:0,scrollY:0
+          },
+          jsPDF:{unit:'mm',format:'a4',orientation:'portrait',compress:true}
+        }).from(document.querySelector('.paper')).toCanvas();
+        const canvas=await worker.get('canvas');
+        await worker.toPdf();
+        const pdf=await worker.get('pdf');
+        while(pdf.getNumberOfPages()>1)pdf.deletePage(pdf.getNumberOfPages());
+        const pageWidth=pdf.internal.pageSize.getWidth();
+        const pageHeight=pdf.internal.pageSize.getHeight();
+        const margin=5;
+        const scale=Math.min((pageWidth-margin*2)/canvas.width,(pageHeight-margin*2)/canvas.height);
+        const width=canvas.width*scale;
+        const height=canvas.height*scale;
+        pdf.setPage(1);
+        pdf.setFillColor(255,255,255);
+        pdf.rect(0,0,pageWidth,pageHeight,'F');
+        pdf.addImage(canvas.toDataURL('image/jpeg',0.96),'JPEG',(pageWidth-width)/2,(pageHeight-height)/2,width,height,undefined,'FAST');
+        pdf.save(pdfFileName())
+      }catch(error){
+        console.error(error);
+        alert('PDFを作成できませんでした。通信状態を確認して、もう一度お試しください。')
+      }finally{
+        button.disabled=false;
+        button.textContent=label;
+        button.removeAttribute('aria-busy');
+        document.body.classList.remove('pdf-exporting');
+        const category=[...document.querySelectorAll('input[name=category]')].find(radio=>radio.value===selectedCategory);
+        if(category)category.checked=true
+      }
     }
 
     function saveLocal(){
