@@ -118,7 +118,7 @@
     const ageOptions='<option value="" disabled selected>50</option>'+Array.from({length:99},(_,index)=>`<option value="${index+1}">${index+1}</option>`).join('');
     for(let i=1;i<=N;i++){
       let tr=document.createElement('tr');
-      tr.innerHTML=`<td><select id="no${i}" class="txt" aria-label="${i}人目の背番号">${numberOptions}</select></td><td><input id="name${i}" class="txt player-name" placeholder="みょうじ　なまえ" aria-label="${i}人目の選手氏名（みょうじ、スペース、なまえ）"></td><td><select id="age${i}" class="txt age-select" aria-label="${i}人目の年齢" required>${ageOptions}</select></td>`;
+      tr.innerHTML=`<td><select id="no${i}" class="txt" aria-label="${i}人目の背番号">${numberOptions}</select></td><td><input id="name${i}" class="txt player-name" aria-label="${i}人目の選手氏名（みょうじ、スペース、なまえ）"></td><td><select id="age${i}" class="txt age-select" aria-label="${i}人目の年齢" required>${ageOptions}</select></td>`;
       rows.appendChild(tr);
       document.getElementById('no'+i).value=String(i)
     }
