@@ -355,20 +355,32 @@
       document.getElementById('share').scrollIntoView({behavior:'smooth'})
     }
 
+    function shareLabel(){
+      const team=document.getElementById('team').value.trim()||'チーム名未入力';
+      return `【${team}】もみじ杯ママさんバレーボール大会 参加申込書`
+    }
+
     async function copyLink(){
       let s=document.getElementById('shareUrl').value;
       if(!s)return;
-      try{await navigator.clipboard.writeText(s)}catch(e){
-        let i=document.getElementById('shareUrl');
-        i.select();
-        document.execCommand('copy')
+      const text=shareLabel()+'\n'+s;
+      try{await navigator.clipboard.writeText(text)}catch(e){
+        const area=document.createElement('textarea');
+        area.value=text;
+        area.style.position='fixed';
+        area.style.opacity='0';
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand('copy');
+        area.remove()
       }
-      alert('リンクをコピーしました。')
+      alert('チーム名付きリンクをコピーしました。')
     }
 
     async function nativeShare(){
       let s=document.getElementById('shareUrl').value||location.href;
-      if(navigator.share)await navigator.share({title:'もみじ杯 参加申込書',url:s});else copyLink()
+      const text=shareLabel();
+      if(navigator.share)await navigator.share({title:text,text,url:s});else copyLink()
     }
 
     function clearAll(){
