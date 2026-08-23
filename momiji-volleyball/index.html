@@ -74,7 +74,7 @@
       <div class="r"><span>電話：</span><input id="phone" class="line" inputmode="tel"></div>
       <div class="note">
         <div>※キャプテンの氏名等は、一番上の欄に記載をお願いします。</div>
-        <div>※背番号は番号の小さい順から記載をお願いします。</div>
+        <div>※キャプテン以外は、背番号の小さい順から記載をお願いします。</div>
       </div>
       <table class="cat">
         <tr>
@@ -132,6 +132,14 @@
       rows.appendChild(tr);
       document.getElementById('no'+i).value=String(i)
     }
+
+    function arrangeNumbersAfterCaptain(){
+      const captainNumber=document.getElementById('no1').value;
+      const remaining=Array.from({length:N},(_,index)=>String(index+1)).filter(number=>number!==captainNumber);
+      for(let i=2;i<=N;i++)document.getElementById('no'+i).value=remaining[i-2]
+    }
+
+    document.getElementById('no1').addEventListener('change',arrangeNumbersAfterCaptain);
 
     const ids=['address','responsible','phone','team','coach','assistantCoach','manager'];
     for(let i=1;i<=N;i++)ids.push('no'+i,'name'+i,'age'+i);
