@@ -111,12 +111,13 @@
   <script>
     const N=12,rows=document.getElementById('rows');
     const numberOptions=Array.from({length:N},(_,index)=>`<option value="${index+1}">${index+1}</option>`).join('');
-    const ageOptions='<option value="">選択</option>'+Array.from({length:50},(_,index)=>`<option value="${index+50}">${index+50}</option>`).join('');
+    const ageOptions=Array.from({length:99},(_,index)=>`<option value="${index+1}">${index+1}</option>`).join('');
     for(let i=1;i<=N;i++){
       let tr=document.createElement('tr');
       tr.innerHTML=`<td><select id="no${i}" class="txt" aria-label="${i}人目の背番号">${numberOptions}</select></td><td><input id="name${i}" class="txt"></td><td><select id="age${i}" class="txt" aria-label="${i}人目の年齢">${ageOptions}</select></td>`;
       rows.appendChild(tr);
-      document.getElementById('no'+i).value=String(i)
+      document.getElementById('no'+i).value=String(i);
+      document.getElementById('age'+i).value='50'
     }
 
     const ids=['address','responsible','phone','team','coach','assistantCoach','manager'];
@@ -174,7 +175,10 @@
     function clearAll(){
       if(!confirm('入力内容をすべて消しますか？'))return;
       ids.forEach(x=>document.getElementById(x).value='');
-      for(let i=1;i<=N;i++)document.getElementById('no'+i).value=String(i);
+      for(let i=1;i<=N;i++){
+        document.getElementById('no'+i).value=String(i);
+        document.getElementById('age'+i).value='50'
+      }
       document.querySelector('input[value="一般"]').checked=true;
       localStorage.removeItem('momiji-form')
     }
