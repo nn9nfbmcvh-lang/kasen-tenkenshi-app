@@ -24,17 +24,15 @@
     .meta th,.meta td{height:62px}
     .meta th{width:20%}
     .txt{width:100%;border:0;background:transparent;text-align:center;font:inherit;outline:none}
-    .players{margin-top:22px}
+    .captain-picker{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin:18px 0 0;font-size:16px;font-weight:700}
+    .captain-picker select{width:260px;max-width:65%;padding:7px 10px;border:1px solid #777;border-radius:6px;background:#fff;font:inherit}
+    .players{margin-top:8px}
     .players th{height:58px}
     .players th:nth-child(1){width:20%}
     .players th:nth-child(2){width:50%}
     .players th:nth-child(3){width:30%}
     .players td{height:64px}
     .players input{font-size:19px}
-    .player-name{display:flex;align-items:center;gap:5px}
-    .player-name .txt{flex:1;min-width:0}
-    .captain-choice{display:flex;align-items:center;gap:3px;white-space:nowrap;font-size:13px;font-weight:700;cursor:pointer}
-    .captain-choice input{width:18px;height:18px;margin:0;flex:0 0 auto}
     .number-input.captain-number{display:block;width:2.3em;height:2.3em;margin:auto;padding:0;border:1.8px solid #222;border-radius:50%}
     .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:14px 0}
     .actions button{border:0;border-radius:10px;background:#222;color:#fff;font-weight:700;font-size:16px;padding:12px 15px}
@@ -54,13 +52,12 @@
       .opts input{width:19px;height:19px}
       th,td{font-size:14px;padding:5px 3px}
       .meta th,.meta td{height:52px}
-      .players{margin-top:18px}
+      .captain-picker{justify-content:stretch;margin-top:14px;font-size:14px}
+      .captain-picker select{flex:1;min-width:0;max-width:none;font-size:16px}
+      .players{margin-top:8px}
       .players th{height:48px}
       .players td{height:54px}
       .players input{font-size:15px}
-      .player-name{gap:3px}
-      .captain-choice{gap:2px;font-size:11px}
-      .captain-choice input{width:16px;height:16px}
     }
     @media print{body{background:#fff}.wrap{max-width:none;padding:0}.paper{border:0;border-radius:0}.actions,.share{display:none!important}}
   </style>
@@ -95,6 +92,12 @@
           <th>マネージャ<br>ー</th><td><input id="manager" class="txt"></td>
         </tr>
       </table>
+      <div class="captain-picker">
+        <label for="captain">キャプテン：</label>
+        <select id="captain" aria-label="キャプテンを選択">
+          <option value="">選択してください</option>
+        </select>
+      </div>
       <table class="players">
         <thead><tr><th>背番号</th><th>選手氏名</th><th>年齢</th></tr></thead>
         <tbody id="rows"></tbody>
@@ -117,30 +120,48 @@
     </div>
   </div>
   <script>
-    const N=12,rows=document.getElementById('rows');
+    const N=12,rows=document.getElementById('rows'),captain=document.getElementById('captain');
     for(let i=1;i<=N;i++){
       let tr=document.createElement('tr');
-      tr.innerHTML=`<td><input id="no${i}" class="txt number-input" inputmode="numeric"></td><td><div class="player-name"><input id="name${i}" class="txt"><label class="captain-choice"><input type="radio" name="captain" value="${i}" aria-label="選手${i}をキャプテンに指定"><span>キャプテン</span></label></div></td><td><input id="age${i}" class="txt" inputmode="numeric"></td>`;
-      rows.appendChild(tr)
+      tr.innerHTML=`<td><input id="no${i}" class="txt number-input" inputmode="numeric"></td><td><input id="name${i}" class="txt"></td><td><input id="age${i}" class="txt" inputmode="numeric"></td>`;
+      rows.appendChild(tr);
+      let option=document.createElement('option');
+      option.value=String(i);
+      option.textContent=`${i}人目`;
+      captain.appendChild(option)
     }
 
     const ids=['address','responsible','phone','team','coach','assistantCoach','manager'];
     for(let i=1;i<=N;i++)ids.push('no'+i,'name'+i,'age'+i);
 
+    function updateCaptainOptions(){
+      for(let i=1;i<=N;i++){
+        const no=document.getElementById('no'+i).value.trim();
+        const name=document.getElementById('name'+i).value.trim();
+        let label=`${i}人目`;
+        if(name)label+=`：${name}`;
+        if(no)label+=`${name?' ':'：'}（背番号${no}）`;
+        captain.querySelector(`option[value="${i}"]`).textContent=label
+      }
+    }
+
     function updateCaptainCircle(){
-      const selected=document.querySelector('input[name=captain]:checked');
       document.querySelectorAll('.number-input').forEach((input,index)=>{
-        input.classList.toggle('captain-number',selected?.value===String(index+1))
+        input.classList.toggle('captain-number',captain.value===String(index+1))
       })
     }
 
-    document.querySelectorAll('input[name=captain]').forEach(input=>input.addEventListener('change',updateCaptainCircle));
+    captain.addEventListener('change',updateCaptainCircle);
+    for(let i=1;i<=N;i++){
+      document.getElementById('no'+i).addEventListener('input',updateCaptainOptions);
+      document.getElementById('name'+i).addEventListener('input',updateCaptainOptions)
+    }
 
     function data(){
       let d={};
       ids.forEach(x=>d[x]=document.getElementById(x).value);
       d.category=document.querySelector('input[name=category]:checked').value;
-      d.captain=document.querySelector('input[name=captain]:checked')?.value||'';
+      d.captain=captain.value;
       return d
     }
 
@@ -150,11 +171,8 @@
         let r=[...document.querySelectorAll('input[name=category]')].find(x=>x.value===d.category);
         if(r)r.checked=true
       }
-      document.querySelectorAll('input[name=captain]').forEach(x=>x.checked=false);
-      if(d.captain){
-        let captain=[...document.querySelectorAll('input[name=captain]')].find(x=>x.value===String(d.captain));
-        if(captain)captain.checked=true
-      }
+      updateCaptainOptions();
+      captain.value=[...captain.options].some(x=>x.value===String(d.captain||''))?String(d.captain||''):'';
       updateCaptainCircle()
     }
 
@@ -196,7 +214,8 @@
       if(!confirm('入力内容をすべて消しますか？'))return;
       ids.forEach(x=>document.getElementById(x).value='');
       document.querySelector('input[value="一般"]').checked=true;
-      document.querySelectorAll('input[name=captain]').forEach(x=>x.checked=false);
+      captain.value='';
+      updateCaptainOptions();
       updateCaptainCircle();
       localStorage.removeItem('momiji-form')
     }
