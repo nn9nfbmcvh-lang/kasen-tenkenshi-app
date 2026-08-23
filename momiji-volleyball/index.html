@@ -126,6 +126,24 @@
     const ids=['address','responsible','phone','team','coach','assistantCoach','manager'];
     for(let i=1;i<=N;i++)ids.push('no'+i,'name'+i,'age'+i);
 
+    function fitPlayerName(input){
+      input.style.fontSize='';
+      let size=parseFloat(getComputedStyle(input).fontSize);
+      while(input.scrollWidth>input.clientWidth&&size>10){
+        size=Math.max(10,size-.5);
+        input.style.fontSize=size+'px'
+      }
+    }
+
+    function fitAllPlayerNames(){
+      document.querySelectorAll('.player-name').forEach(fitPlayerName)
+    }
+
+    document.querySelectorAll('.player-name').forEach(input=>{
+      input.addEventListener('input',()=>fitPlayerName(input))
+    });
+    window.addEventListener('resize',fitAllPlayerNames);
+
     function data(){
       let d={};
       ids.forEach(x=>d[x]=document.getElementById(x).value);
@@ -139,6 +157,7 @@
         let r=[...document.querySelectorAll('input[name=category]')].find(x=>x.value===d.category);
         if(r)r.checked=true
       }
+      requestAnimationFrame(fitAllPlayerNames)
     }
 
     function enc(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))}
@@ -182,7 +201,8 @@
         document.getElementById('no'+i).value=String(i)
       }
       document.querySelector('input[value="一般"]').checked=true;
-      localStorage.removeItem('momiji-form')
+      localStorage.removeItem('momiji-form');
+      fitAllPlayerNames()
     }
 
     (()=>{
@@ -192,6 +212,7 @@
       let s=localStorage.getItem('momiji-form');
       if(s)try{setData(JSON.parse(s))}catch(e){}
     })();
+    requestAnimationFrame(fitAllPlayerNames);
   </script>
 </body>
 </html>
