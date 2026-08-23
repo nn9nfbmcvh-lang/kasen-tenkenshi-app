@@ -283,7 +283,9 @@
 
     function makeShare(){
       let u=new URL(location.href);
-      u.hash='d='+enc(compactData(data()));
+      u.search='';
+      u.hash='';
+      u.searchParams.set('d',enc(compactData(data())));
       let s=u.toString();
       document.getElementById('shareUrl').value=s;
       document.getElementById('share').style.display='block';
@@ -323,8 +325,10 @@
     }
 
     (()=>{
-      if(location.hash.startsWith('#d=')){
-        try{setData(expandData(dec(decodeURIComponent(location.hash.slice(3)))));return}catch(e){}
+      const sharedData=new URL(location.href).searchParams.get('d')||
+        (location.hash.startsWith('#d=')?decodeURIComponent(location.hash.slice(3)):'');
+      if(sharedData){
+        try{setData(expandData(dec(sharedData)));return}catch(e){}
       }
       let s=localStorage.getItem('momiji-form');
       if(s)try{setData(JSON.parse(s))}catch(e){}
