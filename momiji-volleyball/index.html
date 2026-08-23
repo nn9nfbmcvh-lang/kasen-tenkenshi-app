@@ -1,1 +1,213 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>もみじ杯ママさんバレーボール大会 参加申込書</title><style>*{box-sizing:border-box}body{margin:0;background:#eee;color:#222;font-family:"Yu Gothic",Meiryo,sans-serif}.wrap{max-width:730px;margin:auto;padding:4px}.paper{background:#fff;border:1px solid #aaa;border-radius:16px;padding:45px 40px 58px;min-height:1120px}h1{text-align:center;font-size:29px;line-height:1.55;margin:0 0 40px;font-weight:800}.r{display:grid;grid-template-columns:320px 1fr;align-items:end;margin:8px 0;font-size:20px}.r span{text-align:right;padding-right:12px}.line{width:100%;border:0;border-bottom:1px solid #222;background:transparent;font:inherit;padding:3px 6px;outline:none}.note{font-size:20px;font-weight:800;line-height:1.65;margin:28px 0 17px}table{width:100%;border-collapse:collapse}th,td{border:1.6px solid #222;padding:7px;font-size:19px;text-align:center}th{font-weight:800}.cat th{width:20%;height:94px}.opts{display:flex;justify-content:center;gap:28px;flex-wrap:wrap}.opts label{display:flex;align-items:center;gap:7px}.opts input{width:24px;height:24px}.meta th,.meta td{height:62px}.meta th{width:20%}.txt{width:100%;border:0;background:transparent;text-align:center;font:inherit;outline:none}.players{margin-top:22px}.players th{height:58px}.players th:nth-child(1){width:20%}.players th:nth-child(2){width:50%}.players th:nth-child(3){width:30%}.players td{height:64px}.players input{font-size:19px}.actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:14px 0}.actions button{border:0;border-radius:10px;background:#222;color:#fff;font-weight:700;font-size:16px;padding:12px 15px}.actions button.alt{background:#666}.share{display:none;background:#fff;border-radius:12px;padding:14px;margin:0 auto 18px;max-width:730px}.share input{width:100%;padding:10px;border:1px solid #aaa;border-radius:8px}.qr{text-align:center;margin:12px}.qr img{width:230px;height:230px;max-width:80vw;max-height:80vw}.small{font-size:13px;color:#555}@media(max-width:620px){.paper{padding:30px 13px 42px;min-height:0}h1{font-size:20px;margin-bottom:28px}.r{grid-template-columns:150px 1fr;font-size:15px}.note{font-size:15px;margin:22px 0 13px}.cat th{height:70px}.opts{gap:10px}.opts input{width:19px;height:19px}th,td{font-size:14px;padding:5px 3px}.meta th,.meta td{height:52px}.players{margin-top:18px}.players th{height:48px}.players td{height:54px}.players input{font-size:15px}}@media print{body{background:#fff}.wrap{max-width:none;padding:0}.paper{border:0;border-radius:0}.actions,.share{display:none!important}}</style></head><body><div class="wrap"><div class="paper"><h1>もみじ杯ママさんバレーボール大会 参加申<br>込書</h1><div class="r"><span>申込責任者 住所：</span><input id="address" class="line"></div><div class="r"><span>氏名：</span><input id="responsible" class="line"></div><div class="r"><span>電話：</span><input id="phone" class="line" inputmode="tel"></div><div class="note">＊キャプテンは一番最初に記入してください。<br>＊背番号は番号の小さい順からお書きください。</div><table class="cat"><tr><th>カテゴ<br>リー</th><td><div class="opts"><label><input type="radio" name="category" value="一般" checked>一般</label><label><input type="radio" name="category" value="いそじ">いそじ</label><label><input type="radio" name="category" value="ことぶき">ことぶき</label></div></td></tr></table><table class="meta"><tr><th>チーム名</th><td><input id="team" class="txt"></td><th>監督</th><td><input id="coach" class="txt"></td></tr><tr><th>副監督</th><td><input id="assistantCoach" class="txt"></td><th>マネージャ<br>ー</th><td><input id="manager" class="txt"></td></tr></table><table class="players"><thead><tr><th>背番号</th><th>選手氏名</th><th>年齢</th></tr></thead><tbody id="rows"></tbody></table></div><div class="actions"><button onclick="saveLocal()">端末に保存</button><button onclick="makeShare()">共有リンク・QR作成</button><button class="alt" onclick="clearAll()">入力クリア</button></div><div id="share" class="share"><b>共有リンク</b><input id="shareUrl" readonly><div class="actions"><button onclick="copyLink()">リンクをコピー</button><button class="alt" onclick="nativeShare()">スマホで共有</button></div><div id="qr" class="qr"></div><div class="small">入力内容を含むリンク・QRを共有できます。</div></div></div><script>const N=12,rows=document.getElementById('rows');for(let i=1;i<=N;i++){let tr=document.createElement('tr');tr.innerHTML=`<td><input id="no${i}" class="txt" inputmode="numeric"></td><td><input id="name${i}" class="txt"></td><td><input id="age${i}" class="txt" inputmode="numeric"></td>`;rows.appendChild(tr)}const ids=['address','responsible','phone','team','coach','assistantCoach','manager'];for(let i=1;i<=N;i++)ids.push('no'+i,'name'+i,'age'+i);function data(){let d={};ids.forEach(x=>d[x]=document.getElementById(x).value);d.category=document.querySelector('input[name=category]:checked').value;return d}function setData(d){ids.forEach(x=>{if(d[x]!=null)document.getElementById(x).value=d[x]});if(d.category){let r=[...document.querySelectorAll('input[name=category]')].find(x=>x.value===d.category);if(r)r.checked=true}}function enc(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))}function dec(s){return JSON.parse(decodeURIComponent(escape(atob(s))))}function saveLocal(){localStorage.setItem('momiji-form',JSON.stringify(data()));alert('この端末に保存しました。')}function makeShare(){let u=new URL(location.href);u.hash='d='+encodeURIComponent(enc(data()));let s=u.toString();document.getElementById('shareUrl').value=s;document.getElementById('share').style.display='block';document.getElementById('qr').innerHTML='<img alt="QRコード" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(s)+'">';document.getElementById('share').scrollIntoView({behavior:'smooth'})}async function copyLink(){let s=document.getElementById('shareUrl').value;if(!s)return;try{await navigator.clipboard.writeText(s)}catch(e){let i=document.getElementById('shareUrl');i.select();document.execCommand('copy')}alert('リンクをコピーしました。')}async function nativeShare(){let s=document.getElementById('shareUrl').value||location.href;if(navigator.share)await navigator.share({title:'もみじ杯 参加申込書',url:s});else copyLink()}function clearAll(){if(!confirm('入力内容をすべて消しますか？'))return;ids.forEach(x=>document.getElementById(x).value='');document.querySelector('input[value="一般"]').checked=true;localStorage.removeItem('momiji-form')}(()=>{if(location.hash.startsWith('#d=')){try{setData(dec(decodeURIComponent(location.hash.slice(3))));return}catch(e){}}let s=localStorage.getItem('momiji-form');if(s)try{setData(JSON.parse(s))}catch(e){}})();</script></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>もみじ杯ママさんバレーボール大会 参加申込書</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#eee;color:#222;font-family:"Yu Gothic",Meiryo,sans-serif}
+    .wrap{max-width:730px;margin:auto;padding:4px}
+    .paper{background:#fff;border:1px solid #aaa;border-radius:16px;padding:45px 40px 58px;min-height:1120px}
+    h1{text-align:center;font-size:29px;line-height:1.55;margin:0 0 40px;font-weight:800}
+    .r{display:grid;grid-template-columns:320px 1fr;align-items:end;margin:8px 0;font-size:20px}
+    .r span{text-align:right;padding-right:12px}
+    .line{width:100%;border:0;border-bottom:1px solid #222;background:transparent;font:inherit;padding:3px 6px;outline:none}
+    .note{font-size:20px;font-weight:800;line-height:1.65;margin:28px 0 17px}
+    table{width:100%;border-collapse:collapse}
+    th,td{border:1.6px solid #222;padding:7px;font-size:19px;text-align:center}
+    th{font-weight:800}
+    .cat th{width:20%;height:94px}
+    .opts{display:flex;justify-content:center;gap:28px;flex-wrap:wrap}
+    .opts label{display:flex;align-items:center;gap:7px}
+    .opts input{width:24px;height:24px}
+    .meta th,.meta td{height:62px}
+    .meta th{width:20%}
+    .txt{width:100%;border:0;background:transparent;text-align:center;font:inherit;outline:none}
+    .players{margin-top:22px}
+    .players th{height:58px}
+    .players th:nth-child(1){width:20%}
+    .players th:nth-child(2){width:50%}
+    .players th:nth-child(3){width:30%}
+    .players td{height:64px}
+    .players input{font-size:19px}
+    .player-name{display:flex;align-items:center;gap:5px}
+    .player-name .txt{flex:1;min-width:0}
+    .captain-choice{display:flex;align-items:center;gap:3px;white-space:nowrap;font-size:13px;font-weight:700;cursor:pointer}
+    .captain-choice input{width:18px;height:18px;margin:0;flex:0 0 auto}
+    .number-input.captain-number{display:block;width:2.3em;height:2.3em;margin:auto;padding:0;border:1.8px solid #222;border-radius:50%}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:14px 0}
+    .actions button{border:0;border-radius:10px;background:#222;color:#fff;font-weight:700;font-size:16px;padding:12px 15px}
+    .actions button.alt{background:#666}
+    .share{display:none;background:#fff;border-radius:12px;padding:14px;margin:0 auto 18px;max-width:730px}
+    .share input{width:100%;padding:10px;border:1px solid #aaa;border-radius:8px}
+    .qr{text-align:center;margin:12px}
+    .qr img{width:230px;height:230px;max-width:80vw;max-height:80vw}
+    .small{font-size:13px;color:#555}
+    @media(max-width:620px){
+      .paper{padding:30px 13px 42px;min-height:0}
+      h1{font-size:20px;margin-bottom:28px}
+      .r{grid-template-columns:150px 1fr;font-size:15px}
+      .note{font-size:15px;margin:22px 0 13px}
+      .cat th{height:70px}
+      .opts{gap:10px}
+      .opts input{width:19px;height:19px}
+      th,td{font-size:14px;padding:5px 3px}
+      .meta th,.meta td{height:52px}
+      .players{margin-top:18px}
+      .players th{height:48px}
+      .players td{height:54px}
+      .players input{font-size:15px}
+      .player-name{gap:3px}
+      .captain-choice{gap:2px;font-size:11px}
+      .captain-choice input{width:16px;height:16px}
+    }
+    @media print{body{background:#fff}.wrap{max-width:none;padding:0}.paper{border:0;border-radius:0}.actions,.share{display:none!important}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="paper">
+      <h1>もみじ杯ママさんバレーボール大会 参加申<br>込書</h1>
+      <div class="r"><span>申込責任者 住所：</span><input id="address" class="line"></div>
+      <div class="r"><span>氏名：</span><input id="responsible" class="line"></div>
+      <div class="r"><span>電話：</span><input id="phone" class="line" inputmode="tel"></div>
+      <div class="note">＊キャプテンは一番最初に記入してください。<br>＊背番号は番号の小さい順からお書きください。</div>
+      <table class="cat">
+        <tr>
+          <th>カテゴ<br>リー</th>
+          <td>
+            <div class="opts">
+              <label><input type="radio" name="category" value="一般" checked>一般</label>
+              <label><input type="radio" name="category" value="いそじ">いそじ</label>
+              <label><input type="radio" name="category" value="ことぶき">ことぶき</label>
+            </div>
+          </td>
+        </tr>
+      </table>
+      <table class="meta">
+        <tr>
+          <th>チーム名</th><td><input id="team" class="txt"></td>
+          <th>監督</th><td><input id="coach" class="txt"></td>
+        </tr>
+        <tr>
+          <th>副監督</th><td><input id="assistantCoach" class="txt"></td>
+          <th>マネージャ<br>ー</th><td><input id="manager" class="txt"></td>
+        </tr>
+      </table>
+      <table class="players">
+        <thead><tr><th>背番号</th><th>選手氏名</th><th>年齢</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="actions">
+      <button onclick="saveLocal()">端末に保存</button>
+      <button onclick="makeShare()">共有リンク・QR作成</button>
+      <button class="alt" onclick="clearAll()">入力クリア</button>
+    </div>
+    <div id="share" class="share">
+      <b>共有リンク</b>
+      <input id="shareUrl" readonly>
+      <div class="actions">
+        <button onclick="copyLink()">リンクをコピー</button>
+        <button class="alt" onclick="nativeShare()">スマホで共有</button>
+      </div>
+      <div id="qr" class="qr"></div>
+      <div class="small">入力内容を含むリンク・QRを共有できます。</div>
+    </div>
+  </div>
+  <script>
+    const N=12,rows=document.getElementById('rows');
+    for(let i=1;i<=N;i++){
+      let tr=document.createElement('tr');
+      tr.innerHTML=`<td><input id="no${i}" class="txt number-input" inputmode="numeric"></td><td><div class="player-name"><input id="name${i}" class="txt"><label class="captain-choice"><input type="radio" name="captain" value="${i}" aria-label="選手${i}をキャプテンに指定"><span>キャプテン</span></label></div></td><td><input id="age${i}" class="txt" inputmode="numeric"></td>`;
+      rows.appendChild(tr)
+    }
+
+    const ids=['address','responsible','phone','team','coach','assistantCoach','manager'];
+    for(let i=1;i<=N;i++)ids.push('no'+i,'name'+i,'age'+i);
+
+    function updateCaptainCircle(){
+      const selected=document.querySelector('input[name=captain]:checked');
+      document.querySelectorAll('.number-input').forEach((input,index)=>{
+        input.classList.toggle('captain-number',selected?.value===String(index+1))
+      })
+    }
+
+    document.querySelectorAll('input[name=captain]').forEach(input=>input.addEventListener('change',updateCaptainCircle));
+
+    function data(){
+      let d={};
+      ids.forEach(x=>d[x]=document.getElementById(x).value);
+      d.category=document.querySelector('input[name=category]:checked').value;
+      d.captain=document.querySelector('input[name=captain]:checked')?.value||'';
+      return d
+    }
+
+    function setData(d){
+      ids.forEach(x=>{if(d[x]!=null)document.getElementById(x).value=d[x]});
+      if(d.category){
+        let r=[...document.querySelectorAll('input[name=category]')].find(x=>x.value===d.category);
+        if(r)r.checked=true
+      }
+      document.querySelectorAll('input[name=captain]').forEach(x=>x.checked=false);
+      if(d.captain){
+        let captain=[...document.querySelectorAll('input[name=captain]')].find(x=>x.value===String(d.captain));
+        if(captain)captain.checked=true
+      }
+      updateCaptainCircle()
+    }
+
+    function enc(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))}
+    function dec(s){return JSON.parse(decodeURIComponent(escape(atob(s))))}
+
+    function saveLocal(){
+      localStorage.setItem('momiji-form',JSON.stringify(data()));
+      alert('この端末に保存しました。')
+    }
+
+    function makeShare(){
+      let u=new URL(location.href);
+      u.hash='d='+encodeURIComponent(enc(data()));
+      let s=u.toString();
+      document.getElementById('shareUrl').value=s;
+      document.getElementById('share').style.display='block';
+      document.getElementById('qr').innerHTML='<img alt="QRコード" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(s)+'">';
+      document.getElementById('share').scrollIntoView({behavior:'smooth'})
+    }
+
+    async function copyLink(){
+      let s=document.getElementById('shareUrl').value;
+      if(!s)return;
+      try{await navigator.clipboard.writeText(s)}catch(e){
+        let i=document.getElementById('shareUrl');
+        i.select();
+        document.execCommand('copy')
+      }
+      alert('リンクをコピーしました。')
+    }
+
+    async function nativeShare(){
+      let s=document.getElementById('shareUrl').value||location.href;
+      if(navigator.share)await navigator.share({title:'もみじ杯 参加申込書',url:s});else copyLink()
+    }
+
+    function clearAll(){
+      if(!confirm('入力内容をすべて消しますか？'))return;
+      ids.forEach(x=>document.getElementById(x).value='');
+      document.querySelector('input[value="一般"]').checked=true;
+      document.querySelectorAll('input[name=captain]').forEach(x=>x.checked=false);
+      updateCaptainCircle();
+      localStorage.removeItem('momiji-form')
+    }
+
+    (()=>{
+      if(location.hash.startsWith('#d=')){
+        try{setData(dec(decodeURIComponent(location.hash.slice(3))));return}catch(e){}
+      }
+      let s=localStorage.getItem('momiji-form');
+      if(s)try{setData(JSON.parse(s))}catch(e){}
+    })();
+  </script>
+</body>
+</html>
