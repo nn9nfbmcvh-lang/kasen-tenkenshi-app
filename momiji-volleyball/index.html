@@ -121,8 +121,7 @@
     const numberOptions=Array.from({length:N},(_,index)=>`<option value="${index+1}">${index+1}</option>`).join('');
     const ageOptions=Array.from({length:99},(_,index)=>{
       const age=index+1;
-      const placeholder=age===50?'<option value="" disabled selected hidden>50</option>':'';
-      return placeholder+`<option value="${age}">${age}</option>`
+      return `<option value="${age}"${age===50?' selected':''}>${age}</option>`
     }).join('');
     for(let i=1;i<=N;i++){
       let tr=document.createElement('tr');
@@ -134,14 +133,12 @@
     const ids=['address','responsible','phone','team','coach','assistantCoach','manager'];
     for(let i=1;i<=N;i++)ids.push('no'+i,'name'+i,'age'+i);
 
-    function updateAgeColors(){
-      document.querySelectorAll('.age-select').forEach(select=>{
-        select.classList.toggle('age-empty',select.value==='')
-      })
-    }
-
     document.querySelectorAll('.age-select').forEach(select=>{
-      select.addEventListener('change',updateAgeColors)
+      const markSelected=()=>select.classList.remove('age-empty');
+      select.addEventListener('input',markSelected);
+      select.addEventListener('change',markSelected);
+      select.addEventListener('pointerdown',markSelected);
+      select.addEventListener('keydown',markSelected)
     });
 
     function fitPlayerName(input){
@@ -164,7 +161,10 @@
 
     function data(){
       let d={};
-      ids.forEach(x=>d[x]=document.getElementById(x).value);
+      ids.forEach(x=>{
+        const el=document.getElementById(x);
+        d[x]=el.classList.contains('age-empty')?'':el.value
+      });
       d.category=document.querySelector('input[name=category]:checked').value;
       return d
     }
@@ -175,7 +175,15 @@
         let r=[...document.querySelectorAll('input[name=category]')].find(x=>x.value===d.category);
         if(r)r.checked=true
       }
-      updateAgeColors();
+      for(let i=1;i<=N;i++){
+        const age=document.getElementById('age'+i);
+        if(d['age'+i]==null||d['age'+i]===''){
+          age.value='50';
+          age.classList.add('age-empty')
+        }else{
+          age.classList.remove('age-empty')
+        }
+      }
       requestAnimationFrame(fitAllPlayerNames)
     }
 
@@ -217,11 +225,13 @@
       if(!confirm('入力内容をすべて消しますか？'))return;
       ids.forEach(x=>document.getElementById(x).value='');
       for(let i=1;i<=N;i++){
-        document.getElementById('no'+i).value=String(i)
+        document.getElementById('no'+i).value=String(i);
+        const age=document.getElementById('age'+i);
+        age.value='50';
+        age.classList.add('age-empty')
       }
       document.querySelector('input[value="一般"]').checked=true;
       localStorage.removeItem('momiji-form');
-      updateAgeColors();
       fitAllPlayerNames()
     }
 
