@@ -32,6 +32,9 @@
     .players td{height:64px}
     .players input,.players select{font-size:19px}
     .players .player-name{text-align:left;padding:0 8px}
+    .players .age-select{color:#222}
+    .players .age-select:invalid{color:#aaa}
+    .players .age-select option{color:#222}
     .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:14px 0}
     .actions button{border:0;border-radius:10px;background:#222;color:#fff;font-weight:700;font-size:16px;padding:12px 15px}
     .actions button.alt{background:#666}
@@ -112,13 +115,12 @@
   <script>
     const N=12,rows=document.getElementById('rows');
     const numberOptions=Array.from({length:N},(_,index)=>`<option value="${index+1}">${index+1}</option>`).join('');
-    const ageOptions=Array.from({length:99},(_,index)=>`<option value="${index+1}">${index+1}</option>`).join('');
+    const ageOptions='<option value="" disabled selected>50</option>'+Array.from({length:99},(_,index)=>`<option value="${index+1}">${index+1}</option>`).join('');
     for(let i=1;i<=N;i++){
       let tr=document.createElement('tr');
-      tr.innerHTML=`<td><select id="no${i}" class="txt" aria-label="${i}人目の背番号">${numberOptions}</select></td><td><input id="name${i}" class="txt player-name" placeholder="みょうじ　なまえ" aria-label="${i}人目の選手氏名（みょうじ、スペース、なまえ）"></td><td><select id="age${i}" class="txt" aria-label="${i}人目の年齢">${ageOptions}</select></td>`;
+      tr.innerHTML=`<td><select id="no${i}" class="txt" aria-label="${i}人目の背番号">${numberOptions}</select></td><td><input id="name${i}" class="txt player-name" placeholder="みょうじ　なまえ" aria-label="${i}人目の選手氏名（みょうじ、スペース、なまえ）"></td><td><select id="age${i}" class="txt age-select" aria-label="${i}人目の年齢" required>${ageOptions}</select></td>`;
       rows.appendChild(tr);
-      document.getElementById('no'+i).value=String(i);
-      document.getElementById('age'+i).value='50'
+      document.getElementById('no'+i).value=String(i)
     }
 
     const ids=['address','responsible','phone','team','coach','assistantCoach','manager'];
@@ -177,8 +179,7 @@
       if(!confirm('入力内容をすべて消しますか？'))return;
       ids.forEach(x=>document.getElementById(x).value='');
       for(let i=1;i<=N;i++){
-        document.getElementById('no'+i).value=String(i);
-        document.getElementById('age'+i).value='50'
+        document.getElementById('no'+i).value=String(i)
       }
       document.querySelector('input[value="一般"]').checked=true;
       localStorage.removeItem('momiji-form')
