@@ -32,6 +32,8 @@
     .players th:nth-child(3){width:30%}
     .players td{height:64px}
     .players input,.players select{font-size:19px}
+    .captain-number-cell{position:relative}
+    .captain-number-mark{position:absolute;z-index:2;top:50%;left:50%;width:1.75em;height:1.75em;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;border:1.5px solid #222;border-radius:50%;background:#fff;font-size:19px;line-height:1;pointer-events:none}
     .players .player-name{text-align:left;padding:0 8px 0 2em}
     .players .age-select{color:#222}
     .players .age-select:invalid{color:#aaa}
@@ -61,6 +63,7 @@
       .players th{height:48px}
       .players td{height:54px}
       .players input,.players select{font-size:15px}
+      .captain-number-mark{font-size:15px}
     }
     @media print{body{background:#fff}.wrap{max-width:none;padding:0}.paper{border:0;border-radius:0}.actions,.share{display:none!important}}
   </style>
@@ -122,20 +125,21 @@
   <script>
     const N=12,rows=document.getElementById('rows');
     const numberOptions=Array.from({length:N},(_,index)=>`<option value="${index+1}">${index+1}</option>`).join('');
-    const captainNumberOptions=Array.from({length:N},(_,index)=>`<option value="${index+1}">${String.fromCodePoint(0x2460+index)}</option>`).join('');
     const ageOptions=Array.from({length:99},(_,index)=>{
       const age=index+1;
       return `<option value="${age}"${age===50?' selected':''}>${age}</option>`
     }).join('');
     for(let i=1;i<=N;i++){
       let tr=document.createElement('tr');
-      tr.innerHTML=`<td><select id="no${i}" class="txt" aria-label="${i}人目の背番号">${i===1?captainNumberOptions:numberOptions}</select></td><td><input id="name${i}" class="txt player-name" aria-label="${i}人目の選手氏名（みょうじ、スペース、なまえ）"></td><td><select id="age${i}" class="txt age-select age-empty" aria-label="${i}人目の年齢" required>${ageOptions}</select></td>`;
+      const captainMark=i===1?'<span id="captainNumberMark" class="captain-number-mark" aria-hidden="true">1</span>':'';
+      tr.innerHTML=`<td${i===1?' class="captain-number-cell"':''}>${captainMark}<select id="no${i}" class="txt" aria-label="${i}人目の背番号">${numberOptions}</select></td><td><input id="name${i}" class="txt player-name" aria-label="${i}人目の選手氏名（みょうじ、スペース、なまえ）"></td><td><select id="age${i}" class="txt age-select age-empty" aria-label="${i}人目の年齢" required>${ageOptions}</select></td>`;
       rows.appendChild(tr);
       document.getElementById('no'+i).value=String(i)
     }
 
     function arrangeNumbersAfterCaptain(){
       const captainNumber=document.getElementById('no1').value;
+      document.getElementById('captainNumberMark').textContent=captainNumber;
       const remaining=Array.from({length:N},(_,index)=>String(index+1)).filter(number=>number!==captainNumber);
       for(let i=2;i<=N;i++)document.getElementById('no'+i).value=remaining[i-2]
     }
@@ -196,6 +200,7 @@
           age.classList.remove('age-empty')
         }
       }
+      document.getElementById('captainNumberMark').textContent=document.getElementById('no1').value;
       requestAnimationFrame(fitAllPlayerNames)
     }
 
@@ -244,6 +249,7 @@
       }
       document.querySelector('input[value="一般"]').checked=true;
       localStorage.removeItem('momiji-form');
+      document.getElementById('captainNumberMark').textContent=document.getElementById('no1').value;
       fitAllPlayerNames()
     }
 
