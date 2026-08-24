@@ -32,12 +32,12 @@
     .players th:nth-child(3){width:30%}
     .players td{height:64px}
     .players input,.players select{font-size:19px}
-    .number-cell{position:relative}
-    .number-cell select{position:absolute;z-index:3;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+    .number-cell{position:relative;padding-right:28px}
+    .number-cell .number-input{position:absolute;z-index:2;top:50%;left:50%;width:3.2em;height:2em;transform:translate(-50%,-50%);padding:0;border:0;background:#fff;text-align:center;font:inherit;line-height:1;outline:none}
+    .number-cell .captain-number-input{width:2.25em;height:2.25em;border:1.5px solid #222;border-radius:50%}
+    .number-cell .number-picker{position:absolute;z-index:3;top:0;right:0;width:28px;height:100%;opacity:0;cursor:pointer}
     .number-cell::after{content:"";position:absolute;z-index:4;top:50%;right:4px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #222;transform:translateY(-25%);pointer-events:none}
     .pdf-exporting .number-cell::after{display:none}
-    .number-display{position:absolute;z-index:2;top:50%;left:50%;width:1.75em;height:1.75em;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;background:#fff;font-size:19px;line-height:1;pointer-events:none}
-    .captain-number-mark{border:1.5px solid #222;border-radius:50%}
     .players .player-name{text-align:left;padding:0 8px 0 2em}
     .players .age-select{color:#222}
     .players .age-select:invalid{color:#aaa}
@@ -68,7 +68,8 @@
       .players th{height:48px}
       .players td{height:54px}
       .players input,.players select{font-size:15px}
-      .number-display{font-size:15px}
+      .number-cell{padding-right:24px}
+      .number-cell .number-picker{width:24px}
     }
     @media print{body{background:#fff}.wrap{max-width:none;padding:0}.paper{border:0;border-radius:0}.actions,.share{display:none!important}}
   </style>
@@ -131,21 +132,24 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script>
     const N=12,rows=document.getElementById('rows');
-    const numberOptions=Array.from({length:N},(_,index)=>`<option value="${index+1}">${index+1}</option>`).join('');
+    const numberOptions=Array.from({length:100},(_,index)=>`<option value="${index+1}">${index+1}</option>`).join('');
     const ageOptions=Array.from({length:99},(_,index)=>{
       const age=index+1;
       return `<option value="${age}"${age===50?' selected':''}>${age}</option>`
     }).join('');
     for(let i=1;i<=N;i++){
       let tr=document.createElement('tr');
-      const numberMark=`<span id="numberMark${i}" class="number-display${i===1?' captain-number-mark':''}" aria-hidden="true">${i}</span>`;
-      tr.innerHTML=`<td class="number-cell">${numberMark}<select id="no${i}" class="txt" aria-label="${i}人目の背番号">${numberOptions}</select></td><td><input id="name${i}" class="txt player-name" aria-label="${i}人目の選手氏名（みょうじ、スペース、なまえ）"></td><td><select id="age${i}" class="txt age-select age-empty" aria-label="${i}人目の年齢" required>${ageOptions}</select></td>`;
+      tr.innerHTML=`<td class="number-cell"><input id="no${i}" class="number-input${i===1?' captain-number-input':''}" value="${i}" inputmode="numeric" pattern="[0-9]*" aria-label="${i}人目の背番号（直接入力可能）"><select id="noPicker${i}" class="number-picker" aria-label="${i}人目の背番号を1から100から選択"><option value="">番号を選択</option>${numberOptions}</select></td><td><input id="name${i}" class="txt player-name" aria-label="${i}人目の選手氏名（みょうじ、スペース、なまえ）"></td><td><select id="age${i}" class="txt age-select age-empty" aria-label="${i}人目の年齢" required>${ageOptions}</select></td>`;
       rows.appendChild(tr);
-      document.getElementById('no'+i).value=String(i)
+      document.getElementById('noPicker'+i).value=String(i)
     }
 
     function updateNumberMarks(){
-      for(let i=1;i<=N;i++)document.getElementById('numberMark'+i).textContent=document.getElementById('no'+i).value
+      for(let i=1;i<=N;i++){
+        const value=document.getElementById('no'+i).value;
+        const picker=document.getElementById('noPicker'+i);
+        picker.value=/^(?:[1-9]|[1-9][0-9]|100)$/.test(value)?value:''
+      }
     }
 
     function expectedNumbers(captainNumber='1'){
@@ -159,8 +163,20 @@
       updateNumberMarks()
     }
 
-    document.getElementById('no1').addEventListener('change',arrangeNumbersAfterCaptain);
-    for(let i=2;i<=N;i++)document.getElementById('no'+i).addEventListener('change',updateNumberMarks);
+    for(let i=1;i<=N;i++){
+      const input=document.getElementById('no'+i);
+      const picker=document.getElementById('noPicker'+i);
+      input.addEventListener('input',()=>{
+        input.value=input.value.replace(/[^0-9]/g,'');
+        updateNumberMarks()
+      });
+      input.addEventListener('change',i===1?arrangeNumbersAfterCaptain:updateNumberMarks);
+      picker.addEventListener('change',()=>{
+        if(!picker.value)return;
+        input.value=picker.value;
+        if(i===1)arrangeNumbersAfterCaptain();else updateNumberMarks()
+      })
+    }
 
     const ids=['address','responsible','phone','team','coach','assistantCoach','manager'];
     for(let i=1;i<=N;i++)ids.push('no'+i,'name'+i,'age'+i);
