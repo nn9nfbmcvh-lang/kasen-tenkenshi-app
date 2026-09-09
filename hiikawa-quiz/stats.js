@@ -1,7 +1,7 @@
 const STATS_KEY='hiikawa_quiz_stats_v2';
-const ALL_QUESTIONS=QUESTIONS.slice();
-const BASE_QUESTIONS=ALL_QUESTIONS.slice(0,30);
-const CONSULT_QUESTIONS=ALL_QUESTIONS.slice(30,50);
+const BASE_QUESTIONS=QUESTIONS.slice(0,30);
+const CONSULT_QUESTIONS=(typeof CONSULT_QUESTION_BANK!=='undefined'?CONSULT_QUESTION_BANK:QUESTIONS.slice(30));
+const ALL_QUESTIONS=[...BASE_QUESTIONS,...CONSULT_QUESTIONS];
 let runMode='base30',runStartedAt=0,questionShownAt=0,answerTimes=[],currentPlayer='',finishReason='',resultRetryMode='wrongBase';
 const nameInput=document.getElementById('playerName');
 const start20Btn=document.getElementById('start20Btn');
@@ -36,6 +36,8 @@ function migratePlayer(p){
     if(!p.wrongByMode.base30.length)p.wrongByMode.base30=p.wrongKeys.filter(k=>BASE_KEYS.has(k));
     if(!p.wrongByMode.consult20.length)p.wrongByMode.consult20=p.wrongKeys.filter(k=>CONSULT_KEYS.has(k));
   }
+  p.wrongByMode.base30=p.wrongByMode.base30.filter(k=>BASE_KEYS.has(k));
+  p.wrongByMode.consult20=p.wrongByMode.consult20.filter(k=>CONSULT_KEYS.has(k));
   return p;
 }
 function getPlayer(s,name){
@@ -43,13 +45,13 @@ function getPlayer(s,name){
   return migratePlayer(s.players[name]);
 }
 function fmtTime(ms){const sec=Math.max(0,Math.round(ms/1000)),m=Math.floor(sec/60),s=sec%60;return `${m}:${String(s).padStart(2,'0')}`}
-function esc(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function esc(s){return String(s).replace(/[&<>'\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c]))}
 function playerName(){return nameInput.value.trim()}
 function familyForMode(mode){return mode==='consult20'||mode==='wrongConsult'?'consult20':'base30'}
 function modeLabel(mode){return ({base30:'基本30',consult20:'協議20',wrongBase:'復習30',wrongConsult:'復習20'})[mode]||mode}
 function sourceForMode(mode,name){
   if(mode==='base30')return BASE_QUESTIONS;
-  if(mode==='consult20')return CONSULT_QUESTIONS;
+  if(mode==='consult20')return shuffle(CONSULT_QUESTIONS).slice(0,20);
   const s=loadStats(),p=getPlayer(s,name);
   if(mode==='wrongBase'){const set=new Set(p.wrongByMode.base30);return BASE_QUESTIONS.filter(q=>set.has(qKey(q)))}
   if(mode==='wrongConsult'){const set=new Set(p.wrongByMode.consult20);return CONSULT_QUESTIONS.filter(q=>set.has(qKey(q)))}
@@ -61,7 +63,7 @@ function updateWrongButtons(){
   const b=p?p.wrongByMode.base30.length:0,c=p?p.wrongByMode.consult20.length:0;
   retryBaseStart.disabled=b===0;retryConsultStart.disabled=c===0;
   retryBaseStart.textContent=b?`基本30問の間違い ${b}問`:'基本30問の間違いだけ';
-  retryConsultStart.textContent=c?`協議・指示20問の間違い ${c}問`:'協議・指示20問の間違いだけ';
+  retryConsultStart.textContent=c?`協議・指示の間違い ${c}問`:'協議・指示の間違いだけ';
   wrongInfo.textContent=name?`保存中の間違い：基本 ${b}問 ／ 協議・指示 ${c}問`:'名前を入力すると学習履歴を表示します。';
 }
 function renderHistory(){
@@ -93,11 +95,15 @@ answer=function(btn,isCorrect,optIndex){
 finish=function(reason='complete'){
   if(done)return;done=true;clearInterval(timerId);finishReason=reason===true?'timeout':reason;for(let i=0;i<quiz.length;i++)if(results[i]===undefined)results[i]=false;score=results.filter(Boolean).length;
   const elapsedMs=Math.min(300000,Math.max(0,Date.now()-runStartedAt)),answeredCount=selectedIndices.filter(v=>v!==undefined).length,rate=quiz.length?Math.round(score/quiz.length*1000)/10:0,timed=answerTimes.filter(v=>Number.isFinite(v)),avgMs=timed.length?Math.round(timed.reduce((a,b)=>a+b,0)/timed.length):0,wrongKeys=quiz.filter((q,i)=>!results[i]).map(q=>q._key||qKey(q));
-  const s=loadStats(),p=getPlayer(s,currentPlayer||playerName()),family=familyForMode(runMode);p.wrongByMode[family]=wrongKeys;p.attempts.unshift({date:new Date().toISOString(),mode:runMode,total:quiz.length,correct:score,rate,elapsedMs,answered:answeredCount,avgMs,wrongCount:wrongKeys.length});p.attempts=p.attempts.slice(0,50);s.lastName=currentPlayer||playerName();saveStats(s);
+  const s=loadStats(),p=getPlayer(s,currentPlayer||playerName()),family=familyForMode(runMode);
+  const storedWrong=new Set(p.wrongByMode[family]||[]);
+  quiz.forEach((q,i)=>{const k=q._key||qKey(q);if(results[i])storedWrong.delete(k);else storedWrong.add(k)});
+  p.wrongByMode[family]=[...storedWrong];
+  p.attempts.unshift({date:new Date().toISOString(),mode:runMode,total:quiz.length,correct:score,rate,elapsedMs,answered:answeredCount,avgMs,wrongCount:wrongKeys.length});p.attempts=p.attempts.slice(0,50);s.lastName=currentPlayer||playerName();saveStats(s);
   el.quiz.style.display='none';el.result.style.display='block';el.finalScore.textContent=`${score} / ${quiz.length}`;el.comment.textContent=finishReason==='timeout'?'5分経過しました。未回答は✕です。':finishReason==='quit'?'途中終了しました。未回答は✕です。':'';
-  const category=family==='base30'?'基本問題30問':'協議・指示20問';resultMeta.innerHTML=`<div><b>${esc(currentPlayer)}</b> ／ ${category}</div><div class="metrics"><span>正解率 <b>${rate}%</b></span><span>回答時間 <b>${fmtTime(elapsedMs)}</b></span><span>平均 <b>${avgMs?`${(avgMs/1000).toFixed(1)}秒/問`:'—'}</b></span></div>`;
+  const category=family==='base30'?'基本問題30問':'協議・指示20問（ランダム）';resultMeta.innerHTML=`<div><b>${esc(currentPlayer)}</b> ／ ${category}</div><div class="metrics"><span>正解率 <b>${rate}%</b></span><span>回答時間 <b>${fmtTime(elapsedMs)}</b></span><span>平均 <b>${avgMs?`${(avgMs/1000).toFixed(1)}秒/問`:'—'}</b></span></div>`;
   el.review.innerHTML='<h3>回答結果一覧</h3>'+quiz.map((q,i)=>`<div class="row"><div>問${i+1}</div><div class="mark ${results[i]?'ok':'ng'}">${results[i]?'◯':'✕'}</div><div>${esc(q.q)}</div></div>`).join('');
-  resultRetryMode=family==='base30'?'wrongBase':'wrongConsult';retryWrongResult.disabled=wrongKeys.length===0;retryWrongResult.textContent=wrongKeys.length?`この区分の間違い ${wrongKeys.length}問だけ解く`:'全問正解';nameInput.value=currentPlayer;renderHistory();
+  resultRetryMode=family==='base30'?'wrongBase':'wrongConsult';retryWrongResult.disabled=wrongKeys.length===0;retryWrongResult.textContent=wrongKeys.length?`今回の間違い ${wrongKeys.length}問を復習`:'全問正解';nameInput.value=currentPlayer;renderHistory();
 };
 el.next.onclick=()=>{if(selectedIndices[idx]===undefined)return;idx++;idx>=quiz.length?finish('complete'):show()};
 backBtn.onclick=()=>{if(idx<=0||done)return;idx--;show()};
@@ -109,4 +115,5 @@ retryConsultStart.onclick=()=>startQuizMode('wrongConsult');
 retryWrongResult.onclick=()=>{if(!retryWrongResult.disabled)startQuizMode(resultRetryMode)};
 el.restart.onclick=()=>{el.result.style.display='none';el.start.style.display='block';el.timer.classList.remove('warn');renderHistory()};
 nameInput.addEventListener('input',renderHistory);
+start20Btn.textContent=`協議・指示20問（${CONSULT_QUESTIONS.length}問からランダム）`;
 const stored=loadStats();if(stored.lastName)nameInput.value=stored.lastName;renderHistory();
