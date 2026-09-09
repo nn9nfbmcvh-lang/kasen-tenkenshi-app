@@ -1,5 +1,6 @@
 let selectedIndices=[];
 const backBtn=document.getElementById('back');
+const quitBtn=document.getElementById('quit');
 const originalStartQuiz=startQuiz;
 startQuiz=function(){selectedIndices=[];originalStartQuiz()};
 el.startBtn.onclick=startQuiz;
@@ -54,4 +55,9 @@ backBtn.onclick=()=>{
   if(idx<=0||done)return;
   idx--;
   show();
+};
+quitBtn.onclick=()=>{
+  if(done)return;
+  finish();
+  el.comment.textContent='途中終了しました。未回答は✕として集計しました。';
 };
