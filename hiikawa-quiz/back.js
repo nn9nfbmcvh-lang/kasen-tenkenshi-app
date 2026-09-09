@@ -1,3 +1,4 @@
+document.write('<script src="photo7.js?v=1"><\/script>');
 let selectedIndices=[];
 const backBtn=document.getElementById('back');
 const quitBtn=document.getElementById('quit');
